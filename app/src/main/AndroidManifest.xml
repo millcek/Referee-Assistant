@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cz.upol.vojami04.refereeassistant" >
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".tests.TestsActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".tests.TestsExamActivity"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+            android:label="@string/title_activity_tests_exam" >
+        </activity>
+        <activity
+            android:name=".tests.TestsBrowsingActivity"
+            android:label="@string/title_activity_tests_browsing" >
+        </activity>
+        <activity
+            android:name=".tests.TestsExamEvaluationActivity"
+            android:label="@string/title_activity_tests_exam_evaluation" >
+        </activity>
+        <activity
+            android:name=".tests.TestsExamBrowsingActivity"
+            android:label="@string/title_activity_tests_exam_evaluation" >
+        </activity>
+        <activity
+            android:name=".tests.TestsExamLauncherActivity"
+            android:label="@string/title_activity_tests_exam_launcher" >
+        </activity>
+    </application>
+
+</manifest>
