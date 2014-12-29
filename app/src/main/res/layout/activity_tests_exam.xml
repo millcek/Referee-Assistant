@@ -2,8 +2,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:divider="@drawable/horizontal_divider_1"
+    android:dividerPadding="8dip"
     android:orientation="vertical"
     android:padding="16dp"
+    android:showDividers="middle"
     tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamActivity">
 
     <ScrollView
@@ -64,7 +67,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:divider="@drawable/vertical_divider_1"
+        android:dividerPadding="8dip"
+        android:orientation="horizontal"
+        android:showDividers="middle">
 
         <Button
             android:id="@+id/buttonPrevious"

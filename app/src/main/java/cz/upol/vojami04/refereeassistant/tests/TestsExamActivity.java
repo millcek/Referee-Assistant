@@ -4,8 +4,8 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,17 +15,16 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
 import cz.upol.vojami04.refereeassistant.R;
 //TODO
-//vyhodnoceni (nextQuestion)
+//paralelizace
 
 public class TestsExamActivity extends ActionBarActivity {
-    private final String TAG = "milda";
+//    private final String TAG = "milda";
 
     private String[] questions;
     private String[][] answers;
@@ -43,7 +42,7 @@ public class TestsExamActivity extends ActionBarActivity {
         buttonPrev.setEnabled(index != 0);
         buttonNext.setText(getString((index == questions.length - 1) ? R.string.evaluate : (R.string.next)));
 
-        textViewQuestion.setText(questions[index]);
+        textViewQuestion.setText(String.format("[%d/%d] %s", index + 1, questions.length + 1, questions[index]));
         radioGroupAnswers.clearCheck();
         for (int i = 0; i < radioButtons.length; i++) {
             if (userAnswers[index] == i)
@@ -98,7 +97,7 @@ public class TestsExamActivity extends ActionBarActivity {
         myDbHelper.openDataBase();
 
         SQLiteDatabase db = myDbHelper.getReadableDatabase();
-        int[] randomValues = new int[questionCount];
+        List<Integer> randomValues = new LinkedList<>();
         questions = new String[questionCount];
         answers = new String[questionCount][];
         rightAnswers = new int[questionCount];
@@ -110,8 +109,8 @@ public class TestsExamActivity extends ActionBarActivity {
         for (int i = 0; i < questionCount; i++) {
             userAnswers[i] = -1;
             do n = random.nextInt(1200) + 1;
-            while (Arrays.asList(randomValues).contains(n));
-            randomValues[i] = n;
+            while (randomValues.contains(n));
+            randomValues.add(n);
             queryStringBuilder.append(" _id=").append(n).append((i != questionCount - 1) ? " OR" : "");
         }
 
