@@ -14,7 +14,7 @@
         android:text="@string/questions_count" />
 
     <NumberPicker
-        android:id="@+id/numberPickerQuestionsCount"
+        android:id="@+id/questionsCountNumberPicker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

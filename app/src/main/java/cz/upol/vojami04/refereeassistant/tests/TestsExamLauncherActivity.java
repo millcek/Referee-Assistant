@@ -13,22 +13,22 @@ import cz.upol.vojami04.refereeassistant.R;
 
 public class TestsExamLauncherActivity extends ActionBarActivity {
 
-    NumberPicker numberPickerQuestionsCount;
+    NumberPicker questionsCountNumberPicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_exam_launcher);
 
-        numberPickerQuestionsCount = (NumberPicker) findViewById(R.id.numberPickerQuestionsCount);
-        numberPickerQuestionsCount.setMaxValue(50);
-        numberPickerQuestionsCount.setMinValue(5);
-        numberPickerQuestionsCount.setValue(40);
+        questionsCountNumberPicker = (NumberPicker) findViewById(R.id.questionsCountNumberPicker);
+        questionsCountNumberPicker.setMaxValue(50);
+        questionsCountNumberPicker.setMinValue(5);
+        questionsCountNumberPicker.setValue(40);
     }
 
     public void startExam(View view){
         Intent intent = new Intent(this, TestsExamActivity.class);
-        intent.putExtra(TestsActivity.QUESTIONS_COUNT, numberPickerQuestionsCount.getValue());
+        intent.putExtra(TestsActivity.QUESTIONS_COUNT, questionsCountNumberPicker.getValue());
         startActivity(intent);
     }
 
