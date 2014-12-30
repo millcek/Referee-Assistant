@@ -42,7 +42,7 @@ public class TestsExamActivity extends ActionBarActivity {
         buttonPrev.setEnabled(index != 0);
         buttonNext.setText(getString((index == questions.length - 1) ? R.string.evaluate : (R.string.next)));
 
-        textViewQuestion.setText(String.format("[%d/%d] %s", index + 1, questions.length + 1, questions[index]));
+        textViewQuestion.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
         radioGroupAnswers.clearCheck();
         for (int i = 0; i < radioButtons.length; i++) {
             if (userAnswers[index] == i)
@@ -64,15 +64,13 @@ public class TestsExamActivity extends ActionBarActivity {
             intent.putExtra(TestsActivity.USER_ANSWERS, userAnswers);
             intent.putExtra(TestsActivity.RIGHT_ANSWERS, rightAnswers);
             startActivity(intent);
-            return;
+        } else {
+            index++;
+            redraw();
         }
-        index++;
-        redraw();
     }
 
     public void prevQuestion(View view) {
-        if (index == 0)
-            return;
         index--;
         redraw();
     }
@@ -108,7 +106,7 @@ public class TestsExamActivity extends ActionBarActivity {
 
         for (int i = 0; i < questionCount; i++) {
             userAnswers[i] = -1;
-            do n = random.nextInt(1200) + 1;
+            do n = random.nextInt(TestsActivity.DB_QUESTIONS_COUNT) + 1;
             while (randomValues.contains(n));
             randomValues.add(n);
             queryStringBuilder.append(" _id=").append(n).append((i != questionCount - 1) ? " OR" : "");

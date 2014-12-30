@@ -3,9 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:divider="@drawable/horizontal_divider_1"
-    android:dividerPadding="8dip"
     android:orientation="vertical"
-    android:padding="16dp"
     android:showDividers="middle"
     tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamActivity">
 
@@ -17,12 +15,15 @@
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:showDividers="middle"
+            android:divider="@drawable/horizontal_divider_1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/textViewQuestion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="16dp"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <RadioGroup
@@ -34,31 +35,35 @@
                 <RadioButton
                     android:id="@+id/radioButton1"
                     android:layout_width="fill_parent"
+                    android:background="@drawable/radiogroup_divider_background"
                     android:layout_height="wrap_content"
                     android:checked="false"
                     android:onClick="saveAnswer"
-                    android:padding="6dp" />
+                    android:padding="16dp" />
 
                 <RadioButton
                     android:id="@+id/radioButton2"
                     android:layout_width="fill_parent"
+                    android:background="@drawable/radiogroup_divider_background"
                     android:layout_height="wrap_content"
                     android:onClick="saveAnswer"
-                    android:padding="6dp" />
+                    android:padding="16dp" />
 
                 <RadioButton
                     android:id="@+id/radioButton3"
                     android:layout_width="fill_parent"
+                    android:background="@drawable/radiogroup_divider_background"
                     android:layout_height="wrap_content"
                     android:onClick="saveAnswer"
-                    android:padding="6dp" />
+                    android:padding="16dp" />
 
                 <RadioButton
                     android:id="@+id/radioButton4"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/radiogroup_divider_background"
                     android:onClick="saveAnswer"
-                    android:padding="6dp" />
+                    android:padding="16dp" />
             </RadioGroup>
         </LinearLayout>
     </ScrollView>
@@ -68,7 +73,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:divider="@drawable/vertical_divider_1"
-        android:dividerPadding="8dip"
+        android:dividerPadding="12dip"
         android:orientation="horizontal"
         android:showDividers="middle">
 

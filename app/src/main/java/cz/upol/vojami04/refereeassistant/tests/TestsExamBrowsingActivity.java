@@ -27,10 +27,10 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
     private final String TAG = "milda";
 
     private void redraw() {
-        Log.i(TAG,"zacatek redraw");
+        Log.i(TAG, "zacatek redraw");
         buttonPrev.setEnabled(index != 0);
         buttonNext.setEnabled(index != questions.length - 1);
-        textViewQuestion.setText(questions[index]);
+        textViewQuestion.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
         for (int i = 0; i < textViewAnswers.length; i++) {
             textViewAnswers[i].setBackgroundColor(0);
             if (answers[index].length > i) {
@@ -60,7 +60,7 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG,"browsing oncreate");
+        Log.i(TAG, "browsing oncreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_exam_browsing);
 
@@ -72,7 +72,7 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         textViewAnswers[2] = (TextView) findViewById(R.id.textViewAnswer3);
         textViewAnswers[3] = (TextView) findViewById(R.id.textViewAnswer4);
         textViewQuestion = (TextView) findViewById(R.id.textViewQuestion);
-Log.i(TAG, "nacteni prvku");
+        Log.i(TAG, "nacteni prvku");
         Bundle b = getIntent().getExtras();
         TwoDSerializable s = TwoDSerializable.getSingletonObject();
         answers = s.getArray();
