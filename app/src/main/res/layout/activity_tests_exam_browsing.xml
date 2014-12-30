@@ -3,15 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:divider="@drawable/horizontal_divider_1"
+    android:dividerPadding="8dip"
     android:orientation="vertical"
+    android:padding="16dp"
     android:showDividers="middle"
     tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamBrowsingActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="16dp">
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -28,29 +29,25 @@
                 android:id="@+id/textViewAnswer1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="6dp"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:padding="6dp" />
 
             <TextView
                 android:id="@+id/textViewAnswer2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="6dp"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:padding="6dp" />
 
             <TextView
                 android:id="@+id/textViewAnswer3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="6dp"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:padding="6dp" />
 
             <TextView
                 android:id="@+id/textViewAnswer4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="6dp"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:padding="6dp" />
         </LinearLayout>
     </ScrollView>
 
@@ -59,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:divider="@drawable/vertical_divider_1"
-        android:dividerPadding="12dip"
+        android:dividerPadding="8dip"
         android:orientation="horizontal"
         android:showDividers="middle">
 

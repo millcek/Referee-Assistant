@@ -57,13 +57,6 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
         startActivity(intent);
     }
 
-    public void startExam(View view){
-        Intent intent = new Intent(this, TestsExamActivity.class);
-        intent.putExtra(TestsActivity.QUESTIONS_COUNT, questions.length);
-        startActivity(intent);
-        finish();
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

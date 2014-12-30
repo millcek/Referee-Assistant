@@ -17,7 +17,6 @@ public class TestsActivity extends ActionBarActivity {
     public static final String RIGHT_ANSWERS = "right_answers";
     public static final String USER_ANSWERS = "user_answers";
     public static final String QUESTIONS_COUNT = "questions_count";
-    public static final int DB_QUESTIONS_COUNT = 1200;
     private SQLiteDatabase testsDatabase;
 
     @Override
