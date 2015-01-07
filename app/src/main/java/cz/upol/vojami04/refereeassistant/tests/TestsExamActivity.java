@@ -1,13 +1,10 @@
 package cz.upol.vojami04.refereeassistant.tests;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -20,38 +17,40 @@ import java.util.List;
 import java.util.Random;
 
 import cz.upol.vojami04.refereeassistant.R;
+
 //TODO
 //paralelizace
 
 public class TestsExamActivity extends ActionBarActivity {
-//    private final String TAG = "milda";
-
     private String[] questions;
     private String[][] answers;
     private int[] rightAnswers;
     private int[] userAnswers;
     private int index;
-    Button buttonPrev;
-    Button buttonNext;
-    RadioGroup radioGroupAnswers;
+    Button previousButton;
+    Button nextButton;
+    RadioGroup answersRadioGroup;
     RadioButton[] radioButtons;
-    TextView textViewQuestion;
+    TextView questionTextView;
 
     private void redraw() {
 
-        buttonPrev.setEnabled(index != 0);
-        buttonNext.setText(getString((index == questions.length - 1) ? R.string.evaluate : (R.string.next)));
+        previousButton.setEnabled(index != 0);
+        nextButton.setText(getString((index == questions.length - 1) ? R.string.evaluate : (R.string.next)));
 
-        textViewQuestion.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
-        radioGroupAnswers.clearCheck();
+        questionTextView.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
+        answersRadioGroup.clearCheck();
         for (int i = 0; i < radioButtons.length; i++) {
             if (userAnswers[index] == i)
                 radioButtons[i].setChecked(true);
             if (answers[index].length > i) {
                 radioButtons[i].setText(answers[index][i]);
                 radioButtons[i].setVisibility(View.VISIBLE);
-            } else
+                radioButtons[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT));
+            } else {
                 radioButtons[i].setVisibility(View.INVISIBLE);
+                radioButtons[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, 0));
+            }
         }
     }
 
@@ -64,6 +63,7 @@ public class TestsExamActivity extends ActionBarActivity {
             intent.putExtra(TestsActivity.USER_ANSWERS, userAnswers);
             intent.putExtra(TestsActivity.RIGHT_ANSWERS, rightAnswers);
             startActivity(intent);
+            finish();
         } else {
             index++;
             redraw();
@@ -71,6 +71,7 @@ public class TestsExamActivity extends ActionBarActivity {
     }
 
     public void prevQuestion(View view) {
+        if (index == 0) return;
         index--;
         redraw();
     }
@@ -84,7 +85,6 @@ public class TestsExamActivity extends ActionBarActivity {
     }
 
     private void generateQuestions(int questionCount) {
-        // paralelizovat
         DataBaseHelper myDbHelper = new DataBaseHelper(this);
 
         try {
@@ -150,51 +150,71 @@ public class TestsExamActivity extends ActionBarActivity {
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        redraw();
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_exam);
 
-        buttonNext = (Button) findViewById(R.id.buttonNext);
-        buttonPrev = (Button) findViewById(R.id.buttonPrevious);
-        radioGroupAnswers = (RadioGroup) findViewById(R.id.radioGroupAnswers);
+        nextButton = (Button) findViewById(R.id.nextButton);
+        previousButton = (Button) findViewById(R.id.previousButton);
+        answersRadioGroup = (RadioGroup) findViewById(R.id.answersRadioGroup);
         radioButtons = new RadioButton[4];
         radioButtons[0] = (RadioButton) findViewById(R.id.radioButton1);
         radioButtons[1] = (RadioButton) findViewById(R.id.radioButton2);
         radioButtons[2] = (RadioButton) findViewById(R.id.radioButton3);
         radioButtons[3] = (RadioButton) findViewById(R.id.radioButton4);
-        textViewQuestion = (TextView) findViewById(R.id.textViewQuestion);
+        questionTextView = (TextView) findViewById(R.id.questionTextView);
+
+        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector() {
+            @Override
+            void onUpSwipe() {
+            }
+
+            @Override
+            void onDownSwipe() {
+            }
+
+            @Override
+            void onRightSwipe() {
+                prevQuestion(null);
+            }
+
+            @Override
+            void onLeftSwipe() {
+                nextQuestion(null);
+            }
+
+            @Override
+            void onClick() {
+            }
+        };
+        questionTextView.setOnTouchListener(activitySwipeDetector);
 
         generateQuestions(getIntent().getExtras().getInt(TestsActivity.QUESTIONS_COUNT));
-
+        int time = getIntent().getExtras().getInt(TestsActivity.TIME);
+        //nastavit casovac
         index = 0;
         redraw();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_tests_exam, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_tests_exam, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 }

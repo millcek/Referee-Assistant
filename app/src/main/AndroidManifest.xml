@@ -13,21 +13,21 @@
         <activity
             android:name=".tests.TestsExamActivity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-            android:label="@string/title_activity_tests_exam"
-            android:noHistory="true" />
+            android:label="@string/title_activity_tests_exam" />
         <activity
             android:name=".tests.TestsBrowsingActivity"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:label="@string/title_activity_tests_browsing" />
         <activity
             android:name=".tests.TestsExamEvaluationActivity"
             android:label="@string/title_activity_tests_exam_evaluation" />
         <activity
             android:name=".tests.TestsExamBrowsingActivity"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:label="@string/title_activity_tests_exam_evaluation" />
         <activity
             android:name=".tests.TestsExamLauncherActivity"
-            android:label="@string/title_activity_tests_exam_launcher"
-            android:noHistory="true">
+            android:label="@string/title_activity_tests_exam_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

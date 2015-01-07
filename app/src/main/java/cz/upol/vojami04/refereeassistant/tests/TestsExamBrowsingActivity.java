@@ -1,13 +1,11 @@
 package cz.upol.vojami04.refereeassistant.tests;
 
-import android.graphics.Color;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v7.app.ActionBarActivity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import cz.upol.vojami04.refereeassistant.R;
@@ -19,60 +17,91 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
     private int[] rightAnswers;
     private int[] userAnswers;
     private int index;
-    Button buttonPrev;
-    Button buttonNext;
-    TextView[] textViewAnswers;
-    TextView textViewQuestion;
+    Button prevButton;
+    Button nextButton;
+    TextView[] answersTextView;
+    TextView questionTextView;
 
-    private final String TAG = "milda";
 
     private void redraw() {
-        Log.i(TAG, "zacatek redraw");
-        buttonPrev.setEnabled(index != 0);
-        buttonNext.setEnabled(index != questions.length - 1);
-        textViewQuestion.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
-        for (int i = 0; i < textViewAnswers.length; i++) {
-            textViewAnswers[i].setBackgroundColor(0);
+        prevButton.setEnabled(index != 0);
+        nextButton.setEnabled(index != questions.length - 1);
+        questionTextView.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
+        for (int i = 0; i < answersTextView.length; i++) {
+            answersTextView[i].setBackgroundColor(0);
             if (answers[index].length > i) {
-                textViewAnswers[i].setText(answers[index][i]);
-                textViewAnswers[i].setVisibility(View.VISIBLE);
-            } else
-                textViewAnswers[i].setVisibility(View.INVISIBLE);
+                answersTextView[i].setText(answers[index][i]);
+                answersTextView[i].setVisibility(View.VISIBLE);
+                answersTextView[i].setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            } else {
+                answersTextView[i].setVisibility(View.INVISIBLE);
+                answersTextView[i].setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+            }
         }
         if (userAnswers[index] >= 0 && userAnswers[index] < answers[index].length)
-            textViewAnswers[userAnswers[index]].setBackgroundColor(Color.RED);
+            answersTextView[userAnswers[index]].setBackgroundColor(getResources().getColor(R.color.wrong_answer));
         if (rightAnswers[index] >= 0 && rightAnswers[index] < answers[index].length)
-            if (userAnswers[index] < 0)
-                textViewAnswers[rightAnswers[index]].setBackgroundColor(Color.YELLOW);
+            if (userAnswers[index] != rightAnswers[index])
+                answersTextView[rightAnswers[index]].setBackgroundColor(getResources().getColor(R.color.unanswered));
             else
-                textViewAnswers[rightAnswers[index]].setBackgroundColor(Color.GREEN);
+                answersTextView[rightAnswers[index]].setBackgroundColor(getResources().getColor(R.color.right_answer));
     }
 
     public void nextQuestion(View view) {
-        index++;
-        redraw();
+        if (index < questions.length - 1) {
+            index++;
+            redraw();
+        }
     }
 
     public void prevQuestion(View view) {
-        index--;
-        redraw();
+        if (index > 0) {
+            index--;
+            redraw();
+        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "browsing oncreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_exam_browsing);
 
-        buttonNext = (Button) findViewById(R.id.buttonNext);
-        buttonPrev = (Button) findViewById(R.id.buttonPrevious);
-        textViewAnswers = new TextView[4];
-        textViewAnswers[0] = (TextView) findViewById(R.id.textViewAnswer1);
-        textViewAnswers[1] = (TextView) findViewById(R.id.textViewAnswer2);
-        textViewAnswers[2] = (TextView) findViewById(R.id.textViewAnswer3);
-        textViewAnswers[3] = (TextView) findViewById(R.id.textViewAnswer4);
-        textViewQuestion = (TextView) findViewById(R.id.textViewQuestion);
-        Log.i(TAG, "nacteni prvku");
+        nextButton = (Button) findViewById(R.id.nextButton);
+        prevButton = (Button) findViewById(R.id.previousButton);
+        answersTextView = new TextView[4];
+        answersTextView[0] = (TextView) findViewById(R.id.textViewAnswer1);
+        answersTextView[1] = (TextView) findViewById(R.id.textViewAnswer2);
+        answersTextView[2] = (TextView) findViewById(R.id.textViewAnswer3);
+        answersTextView[3] = (TextView) findViewById(R.id.textViewAnswer4);
+        questionTextView = (TextView) findViewById(R.id.questionTextView);
+
+        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector() {
+            @Override
+            void onUpSwipe() {
+            }
+
+            @Override
+            void onDownSwipe() {
+            }
+
+            @Override
+            void onRightSwipe() {
+                prevQuestion(null);
+            }
+
+            @Override
+            void onLeftSwipe() {
+                nextQuestion(null);
+            }
+
+            @Override
+            void onClick() {
+            }
+        };
+        questionTextView.setOnTouchListener(activitySwipeDetector);
+        for (int i = 0; i < answersTextView.length; i++)
+            answersTextView[i].setOnTouchListener(activitySwipeDetector);
+
         Bundle b = getIntent().getExtras();
         TwoDSerializable s = TwoDSerializable.getSingletonObject();
         answers = s.getArray();
@@ -83,26 +112,25 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         redraw();
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_tests_exam_evaluation, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_tests_exam_evaluation, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 }
