@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,29 +8,41 @@
     android:showDividers="middle"
     tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamLauncherActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/questions_count" />
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:padding="@dimen/default_padding">
 
-    <NumberPicker
-        android:id="@+id/questionsCountNumberPicker"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="@dimen/default_padding" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/questions_count" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/test_time_in_minutes" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/test_time_in_minutes"
+            android:layout_column="2" />
+    </TableRow>
 
-    <NumberPicker
-        android:id="@+id/timeNumberPicker"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="@dimen/default_padding" />
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="0dp">
+
+        <NumberPicker
+            android:id="@+id/timeNumberPicker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="@dimen/default_padding" />
+
+        <NumberPicker
+            android:id="@+id/questionsCountNumberPicker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="@dimen/default_padding" />
+    </TableRow>
 
     <Button
         android:id="@+id/button"
@@ -41,4 +53,4 @@
         android:padding="@dimen/default_padding"
         android:text="@string/start_test" />
 
-</LinearLayout>
+</TableLayout>
