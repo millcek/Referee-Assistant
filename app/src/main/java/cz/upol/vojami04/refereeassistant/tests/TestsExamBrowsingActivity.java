@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import cz.upol.vojami04.refereeassistant.R;
@@ -21,7 +22,8 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
     Button nextButton;
     TextView[] answersTextView;
     TextView questionTextView;
-
+    ScrollView scrollView;
+    View fillerView;
 
     private void redraw() {
         prevButton.setEnabled(index != 0);
@@ -45,6 +47,8 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
                 answersTextView[rightAnswers[index]].setBackgroundColor(getResources().getColor(R.color.unanswered));
             else
                 answersTextView[rightAnswers[index]].setBackgroundColor(getResources().getColor(R.color.right_answer));
+        scrollView.pageScroll(View.FOCUS_UP);
+
     }
 
     public void nextQuestion(View view) {
@@ -74,6 +78,8 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         answersTextView[2] = (TextView) findViewById(R.id.textViewAnswer3);
         answersTextView[3] = (TextView) findViewById(R.id.textViewAnswer4);
         questionTextView = (TextView) findViewById(R.id.questionTextView);
+        scrollView = (ScrollView) findViewById(R.id.scrollView);
+        fillerView = findViewById(R.id.fillerView);
 
         ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector() {
             @Override
@@ -99,6 +105,7 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
             }
         };
         questionTextView.setOnTouchListener(activitySwipeDetector);
+        fillerView.setOnTouchListener(activitySwipeDetector);
         for (int i = 0; i < answersTextView.length; i++)
             answersTextView[i].setOnTouchListener(activitySwipeDetector);
 
@@ -111,26 +118,4 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         index = 0;
         redraw();
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_tests_exam_evaluation, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
 }

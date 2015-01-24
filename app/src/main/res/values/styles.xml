@@ -1,12 +1,6 @@
 <resources>
 
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-<!----><item name="android:button">@style/AnswerButton</item>
-    </style>
-
-    <style name="AnswerButton" parent="android:Widget">
-        <item name="android:background">@drawable/primary_button</item>
     </style>
 
 </resources>

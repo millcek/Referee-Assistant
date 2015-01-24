@@ -1,4 +1,4 @@
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,41 +8,51 @@
     android:showDividers="middle"
     tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamLauncherActivity">
 
-    <TableRow
+    <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:padding="@dimen/default_padding">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="@string/questions_count" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/test_time_in_minutes"
-            android:layout_column="2" />
-    </TableRow>
-
-    <TableRow
-        android:layout_width="fill_parent"
-        android:layout_height="0dp">
-
-        <NumberPicker
-            android:id="@+id/timeNumberPicker"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:padding="@dimen/default_padding" />
+            android:text="@string/test_time_in_minutes" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@drawable/vertical_divider_1"
+        android:orientation="horizontal"
+        android:showDividers="middle">
 
         <NumberPicker
             android:id="@+id/questionsCountNumberPicker"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:padding="@dimen/default_padding" />
-    </TableRow>
+
+        <NumberPicker
+            android:id="@+id/timeNumberPicker"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="@dimen/default_padding" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
     <Button
         android:id="@+id/button"
@@ -53,4 +63,4 @@
         android:padding="@dimen/default_padding"
         android:text="@string/start_test" />
 
-</TableLayout>
+</LinearLayout>

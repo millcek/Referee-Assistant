@@ -4,11 +4,17 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import cz.upol.vojami04.refereeassistant.R;
 
 
 public class TestsBrowsingActivity extends ActionBarActivity {
+    // TODO
+//    nacte se vzdy urcity pocet otazek (50), musi se pamatovat vsechny pro prohlizeni zpet a i vsechny odpovedi
+    // nejdriv dodelat tridu pro otazky :-))
+    private int pos;
+    private int wrongCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,6 +22,9 @@ public class TestsBrowsingActivity extends ActionBarActivity {
         setContentView(R.layout.activity_tests_browsing);
     }
 
+    private void redraw() {
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -37,5 +46,14 @@ public class TestsBrowsingActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void saveAnswer(View view) {
+    }
+
+    public void nextQuestion(View view) {
+    }
+
+    public void prevQuestion(View view) {
     }
 }

@@ -20,6 +20,7 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
     private int wrongAnswersCount;
     Button buttonWrongQuestions;
     Button buttonAllQuestions;
+    int minutes;
 
     public void startBrowsingAllQuestions(View view) {
         Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
@@ -58,6 +59,7 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
     public void startExam(View view) {
         Intent intent = new Intent(this, TestsExamActivity.class);
         intent.putExtra(TestsActivity.QUESTIONS_COUNT, questions.length);
+        intent.putExtra(TestsActivity.TIME, minutes);
         startActivity(intent);
         finish();
     }
@@ -77,41 +79,22 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
         questions = b.getStringArray(TestsActivity.QUESTIONS);
         rightAnswers = b.getIntArray(TestsActivity.RIGHT_ANSWERS);
         userAnswers = b.getIntArray(TestsActivity.USER_ANSWERS);
+        minutes = b.getInt(TestsActivity.TIME);
 
         wrongAnswersCount = 0;
         for (int i = 0; i < userAnswers.length; i++)
             if (userAnswers[i] != rightAnswers[i])
                 wrongAnswersCount++;
 
-        textViewErrorsCount.setText(String.format("%d (%d%%)", wrongAnswersCount, 100 / questions.length * wrongAnswersCount));
-        if (wrongAnswersCount == 0) {
-            textViewErrorsCount.setTextColor(Color.GREEN);
-            buttonWrongQuestions.setEnabled(false);
-        } else
+        int percentage = 100 / questions.length * wrongAnswersCount;
+        if (percentage > 0) {
+            textViewErrorsCount.setText(String.format("%d (%d%%)", wrongAnswersCount, percentage));
             textViewErrorsCount.setTextColor(Color.RED);
+        } else {
+            textViewErrorsCount.setText(String.format("%d", wrongAnswersCount));
+            textViewErrorsCount.setTextColor(getResources().getColor(R.color.right_answer));
+            buttonWrongQuestions.setEnabled(false);
+        }
 
     }
-
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_tests_exam_evaluation, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
 }

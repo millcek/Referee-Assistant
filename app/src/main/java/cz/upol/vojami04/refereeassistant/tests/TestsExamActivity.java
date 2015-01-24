@@ -4,11 +4,14 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -27,11 +30,19 @@ public class TestsExamActivity extends ActionBarActivity {
     private int[] rightAnswers;
     private int[] userAnswers;
     private int index;
+    private boolean stoppedTimer;
+
+    ScrollView scrollView;
     Button previousButton;
     Button nextButton;
     RadioGroup answersRadioGroup;
     RadioButton[] radioButtons;
     TextView questionTextView;
+    TextView timerTextView;
+
+    private Handler customHandler = new Handler();
+    private long startTime;
+    private int minutes;
 
     private void redraw() {
 
@@ -52,6 +63,7 @@ public class TestsExamActivity extends ActionBarActivity {
                 radioButtons[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, 0));
             }
         }
+        scrollView.pageScroll(View.FOCUS_UP);
     }
 
     public void nextQuestion(View view) {
@@ -62,6 +74,8 @@ public class TestsExamActivity extends ActionBarActivity {
             intent.putExtra(TestsActivity.QUESTIONS, questions);
             intent.putExtra(TestsActivity.USER_ANSWERS, userAnswers);
             intent.putExtra(TestsActivity.RIGHT_ANSWERS, rightAnswers);
+            intent.putExtra(TestsActivity.TIME, minutes);
+            stoppedTimer = true;
             startActivity(intent);
             finish();
         } else {
@@ -114,37 +128,42 @@ public class TestsExamActivity extends ActionBarActivity {
 
         String query = queryStringBuilder.toString();
 
-        Cursor questionsCursor = db.rawQuery("SELECT text FROM questions WHERE" + query, null);
-        int i = 0;
-        while (questionsCursor.moveToNext()) {
-            questions[i] = questionsCursor.getString(0);
-            i++;
-        }
-        questionsCursor.close();
-        Cursor answersCursor = db.rawQuery(String.format("SELECT id_questions, text, correct FROM answers WHERE%s", query.replace("_id", "id_questions")), null);
-        i = 0;
-        int last = -1;
-        List<String> listAnswers = new LinkedList<>();
-        while (answersCursor.moveToNext()) {
-            n = answersCursor.getInt(0);
-            if (n != last) {
-                if (last != -1) {
-                    answers[i] = new String[listAnswers.size()];
-                    for (int j = 0; j < listAnswers.size(); j++)
-                        answers[i][j] = listAnswers.get(j);
-                    listAnswers = new LinkedList<>();
-                    i++;
-                }
-                last = n;
+        synchronized (this) {
+            Cursor questionsCursor = db.rawQuery("SELECT text FROM questions WHERE" + query, null);
+            int i = 0;
+            while (questionsCursor.moveToNext()) {
+                questions[i] = questionsCursor.getString(0);
+                i++;
             }
-            if (answersCursor.getInt(2) == 1)
-                rightAnswers[i] = listAnswers.size();
-            listAnswers.add(answersCursor.getString(1));
+            questionsCursor.close();
         }
-        answers[i] = new String[listAnswers.size()];
-        for (int j = 0; j < listAnswers.size(); j++)
-            answers[i][j] = listAnswers.get(j);
-        answersCursor.close();
+
+        synchronized (this) {
+            Cursor answersCursor = db.rawQuery(String.format("SELECT id_questions, text, correct FROM answers WHERE%s", query.replace("_id", "id_questions")), null);
+            int i = 0;
+            int last = -1;
+            List<String> listAnswers = new LinkedList<>();
+            while (answersCursor.moveToNext()) {
+                n = answersCursor.getInt(0);
+                if (n != last) {
+                    if (last != -1) {
+                        answers[i] = new String[listAnswers.size()];
+                        for (int j = 0; j < listAnswers.size(); j++)
+                            answers[i][j] = listAnswers.get(j);
+                        listAnswers = new LinkedList<>();
+                        i++;
+                    }
+                    last = n;
+                }
+                if (answersCursor.getInt(2) == 1)
+                    rightAnswers[i] = listAnswers.size();
+                listAnswers.add(answersCursor.getString(1));
+            }
+            answers[i] = new String[listAnswers.size()];
+            for (int j = 0; j < listAnswers.size(); j++)
+                answers[i][j] = listAnswers.get(j);
+            answersCursor.close();
+        }
         db.close();
         myDbHelper.close();
     }
@@ -163,6 +182,8 @@ public class TestsExamActivity extends ActionBarActivity {
         radioButtons[2] = (RadioButton) findViewById(R.id.radioButton3);
         radioButtons[3] = (RadioButton) findViewById(R.id.radioButton4);
         questionTextView = (TextView) findViewById(R.id.questionTextView);
+        timerTextView = (TextView) findViewById(R.id.timerTextView);
+        scrollView = (ScrollView) findViewById(R.id.scrollView);
 
         ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector() {
             @Override
@@ -188,33 +209,37 @@ public class TestsExamActivity extends ActionBarActivity {
             }
         };
         questionTextView.setOnTouchListener(activitySwipeDetector);
+        timerTextView.setOnTouchListener(activitySwipeDetector);
 
         generateQuestions(getIntent().getExtras().getInt(TestsActivity.QUESTIONS_COUNT));
-        int time = getIntent().getExtras().getInt(TestsActivity.TIME);
-        //nastavit casovac
+
         index = 0;
         redraw();
+        minutes = getIntent().getExtras().getInt(TestsActivity.TIME);
+        startTime = SystemClock.uptimeMillis() + (minutes * 60 * 1000);
+        customHandler.postDelayed(updateTimerThread, 0);
+        stoppedTimer = false;
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_tests_exam, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
+    private Runnable updateTimerThread = new Runnable() {
+
+        public void run() {
+            if (stoppedTimer)
+                return;
+
+            long timeInMilliseconds = startTime - SystemClock.uptimeMillis();
+
+            if (timeInMilliseconds <= 0) {
+                index = questions.length - 1;
+                nextQuestion(null);
+                finish();
+                return;
+            }
+
+            int secs = (int) (timeInMilliseconds / 1000);
+            timerTextView.setText(String.format("Do konce testu zbývá: %02d:%02d", secs / 60, secs % 60));
+            customHandler.postDelayed(this, 0);
+        }
+
+    };
 }

@@ -8,13 +8,15 @@
     tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamActivity">
 
     <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:divider="@drawable/horizontal_divider_1"
             android:orientation="vertical"
             android:showDividers="middle">
@@ -70,6 +72,12 @@
                     android:padding="@dimen/default_padding" />
             </RadioGroup>
 
+            <TextView
+                android:id="@+id/timerTextView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="@dimen/default_padding" />
         </LinearLayout>
     </ScrollView>
 
