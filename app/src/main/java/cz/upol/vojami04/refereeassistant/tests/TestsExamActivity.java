@@ -21,14 +21,8 @@ import java.util.Random;
 
 import cz.upol.vojami04.refereeassistant.R;
 
-//TODO
-//paralelizace
-
 public class TestsExamActivity extends ActionBarActivity {
-    private String[] questions;
-    private String[][] answers;
-    private int[] rightAnswers;
-    private int[] userAnswers;
+    private Question[] questions;
     private int index;
     private boolean stoppedTimer;
 
@@ -52,10 +46,10 @@ public class TestsExamActivity extends ActionBarActivity {
         questionTextView.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
         answersRadioGroup.clearCheck();
         for (int i = 0; i < radioButtons.length; i++) {
-            if (userAnswers[index] == i)
-                radioButtons[i].setChecked(true);
-            if (answers[index].length > i) {
-                radioButtons[i].setText(answers[index][i]);
+            if (questions[index].getAnswers().length > i) {
+                if (questions[index].getAnswer(i).isUsers())
+                    radioButtons[i].setChecked(true);
+                radioButtons[i].setText(questions[index].getAnswer(i).toString());
                 radioButtons[i].setVisibility(View.VISIBLE);
                 radioButtons[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT));
             } else {
@@ -69,11 +63,7 @@ public class TestsExamActivity extends ActionBarActivity {
     public void nextQuestion(View view) {
         if (index == questions.length - 1) {
             Intent intent = new Intent(this, TestsExamEvaluationActivity.class);
-            TwoDSerializable s = TwoDSerializable.getSingletonObject();
-            s.setArray(answers);
             intent.putExtra(TestsActivity.QUESTIONS, questions);
-            intent.putExtra(TestsActivity.USER_ANSWERS, userAnswers);
-            intent.putExtra(TestsActivity.RIGHT_ANSWERS, rightAnswers);
             intent.putExtra(TestsActivity.TIME, minutes);
             stoppedTimer = true;
             startActivity(intent);
@@ -91,11 +81,11 @@ public class TestsExamActivity extends ActionBarActivity {
     }
 
     public void saveAnswer(View view) {
-        for (int i = 0; i < radioButtons.length; i++)
-            if (radioButtons[i].isChecked()) {
-                userAnswers[index] = i;
-                break;
-            }
+        for (int i = 0; i < radioButtons.length; i++) {
+            if (i >= questions[index].getAnswers().length)
+                return;
+            questions[index].getAnswer(i).setUsers(radioButtons[i].isChecked());
+        }
     }
 
     private void generateQuestions(int questionCount) {
@@ -110,16 +100,14 @@ public class TestsExamActivity extends ActionBarActivity {
 
         SQLiteDatabase db = myDbHelper.getReadableDatabase();
         List<Integer> randomValues = new LinkedList<>();
-        questions = new String[questionCount];
-        answers = new String[questionCount][];
-        rightAnswers = new int[questionCount];
-        userAnswers = new int[questionCount];
+
+        questions = new Question[questionCount];
         Random random = new Random();
         int n;
         StringBuilder queryStringBuilder = new StringBuilder();
 
         for (int i = 0; i < questionCount; i++) {
-            userAnswers[i] = -1;
+            questions[i] = new Question();
             do n = random.nextInt(TestsActivity.DB_QUESTIONS_COUNT) + 1;
             while (randomValues.contains(n));
             randomValues.add(n);
@@ -132,7 +120,7 @@ public class TestsExamActivity extends ActionBarActivity {
             Cursor questionsCursor = db.rawQuery("SELECT text FROM questions WHERE" + query, null);
             int i = 0;
             while (questionsCursor.moveToNext()) {
-                questions[i] = questionsCursor.getString(0);
+                questions[i].setText(questionsCursor.getString(0));
                 i++;
             }
             questionsCursor.close();
@@ -141,31 +129,39 @@ public class TestsExamActivity extends ActionBarActivity {
         synchronized (this) {
             Cursor answersCursor = db.rawQuery(String.format("SELECT id_questions, text, correct FROM answers WHERE%s", query.replace("_id", "id_questions")), null);
             int i = 0;
+            int correct = 0;
             int last = -1;
             List<String> listAnswers = new LinkedList<>();
             while (answersCursor.moveToNext()) {
                 n = answersCursor.getInt(0);
                 if (n != last) {
                     if (last != -1) {
-                        answers[i] = new String[listAnswers.size()];
-                        for (int j = 0; j < listAnswers.size(); j++)
-                            answers[i][j] = listAnswers.get(j);
+                        fillAnswers(i, listAnswers, correct);
                         listAnswers = new LinkedList<>();
                         i++;
                     }
                     last = n;
                 }
                 if (answersCursor.getInt(2) == 1)
-                    rightAnswers[i] = listAnswers.size();
+                    correct = listAnswers.size();
                 listAnswers.add(answersCursor.getString(1));
             }
-            answers[i] = new String[listAnswers.size()];
-            for (int j = 0; j < listAnswers.size(); j++)
-                answers[i][j] = listAnswers.get(j);
+            fillAnswers(i, listAnswers, correct);
             answersCursor.close();
         }
+
         db.close();
         myDbHelper.close();
+    }
+
+    private void fillAnswers(int index, List<String> listAnswers, int correct) {
+        questions[index].setAnswers(new Answer[listAnswers.size()]);
+        for (int j = 0; j < listAnswers.size(); j++) {
+            questions[index].setAnswer(j, new Answer());
+            questions[index].getAnswer(j).setText(listAnswers.get(j));
+        }
+        questions[index].getAnswer(correct).setCorrect(true);
+        questions[index].mixUpAnswers();
     }
 
     @Override
@@ -185,14 +181,7 @@ public class TestsExamActivity extends ActionBarActivity {
         timerTextView = (TextView) findViewById(R.id.timerTextView);
         scrollView = (ScrollView) findViewById(R.id.scrollView);
 
-        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector() {
-            @Override
-            void onUpSwipe() {
-            }
-
-            @Override
-            void onDownSwipe() {
-            }
+        SwipeDetector swipeDetector = new SwipeDetector() {
 
             @Override
             void onRightSwipe() {
@@ -208,13 +197,14 @@ public class TestsExamActivity extends ActionBarActivity {
             void onClick() {
             }
         };
-        questionTextView.setOnTouchListener(activitySwipeDetector);
-        timerTextView.setOnTouchListener(activitySwipeDetector);
+        questionTextView.setOnTouchListener(swipeDetector);
+        timerTextView.setOnTouchListener(swipeDetector);
 
         generateQuestions(getIntent().getExtras().getInt(TestsActivity.QUESTIONS_COUNT));
 
         index = 0;
         redraw();
+
         minutes = getIntent().getExtras().getInt(TestsActivity.TIME);
         startTime = SystemClock.uptimeMillis() + (minutes * 60 * 1000);
         customHandler.postDelayed(updateTimerThread, 0);

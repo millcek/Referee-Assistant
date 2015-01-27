@@ -12,8 +12,6 @@ import cz.upol.vojami04.refereeassistant.R;
 public class TestsActivity extends ActionBarActivity {
 
     public static final String QUESTIONS = "questions";
-    public static final String RIGHT_ANSWERS = "right_answers";
-    public static final String USER_ANSWERS = "user_answers";
     public static final String QUESTIONS_COUNT = "questions_count";
     public static final String TIME = "time";
     public static final int DB_QUESTIONS_COUNT = 1200;

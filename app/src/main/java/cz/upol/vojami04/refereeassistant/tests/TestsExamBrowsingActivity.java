@@ -1,6 +1,7 @@
 package cz.upol.vojami04.refereeassistant.tests;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,14 +10,12 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.Arrays;
+
 import cz.upol.vojami04.refereeassistant.R;
 
-
 public class TestsExamBrowsingActivity extends ActionBarActivity {
-    private String[] questions;
-    private String[][] answers;
-    private int[] rightAnswers;
-    private int[] userAnswers;
+    private Question[] questions;
     private int index;
     Button prevButton;
     Button nextButton;
@@ -26,13 +25,16 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
     View fillerView;
 
     private void redraw() {
+        scrollView.pageScroll(View.FOCUS_UP);
         prevButton.setEnabled(index != 0);
         nextButton.setEnabled(index != questions.length - 1);
-        questionTextView.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
+        Question q = questions[index];
+        questionTextView.setText(String.format("[%d/%d] %s", index + 1, questions.length, q));
+
         for (int i = 0; i < answersTextView.length; i++) {
             answersTextView[i].setBackgroundColor(0);
-            if (answers[index].length > i) {
-                answersTextView[i].setText(answers[index][i]);
+            if (q.getAnswers().length > i) {
+                answersTextView[i].setText(q.getAnswer(i).toString());
                 answersTextView[i].setVisibility(View.VISIBLE);
                 answersTextView[i].setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             } else {
@@ -40,15 +42,15 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
                 answersTextView[i].setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
             }
         }
-        if (userAnswers[index] >= 0 && userAnswers[index] < answers[index].length)
-            answersTextView[userAnswers[index]].setBackgroundColor(getResources().getColor(R.color.wrong_answer));
-        if (rightAnswers[index] >= 0 && rightAnswers[index] < answers[index].length)
-            if (userAnswers[index] != rightAnswers[index])
-                answersTextView[rightAnswers[index]].setBackgroundColor(getResources().getColor(R.color.unanswered));
-            else
-                answersTextView[rightAnswers[index]].setBackgroundColor(getResources().getColor(R.color.right_answer));
-        scrollView.pageScroll(View.FOCUS_UP);
 
+        if (q.isCorrectlyAnswered())
+            answersTextView[q.getCorrectAnswerIndex()].setBackgroundColor(getResources().getColor(R.color.right_answer));
+        else {
+            if (q.getCorrectAnswerIndex() != -1)
+                answersTextView[q.getCorrectAnswerIndex()].setBackgroundColor(getResources().getColor(R.color.unanswered));
+            if (q.getUsersAnswerIndex() != -1)
+                answersTextView[q.getUsersAnswerIndex()].setBackgroundColor(getResources().getColor(R.color.wrong_answer));
+        }
     }
 
     public void nextQuestion(View view) {
@@ -81,15 +83,7 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         scrollView = (ScrollView) findViewById(R.id.scrollView);
         fillerView = findViewById(R.id.fillerView);
 
-        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector() {
-            @Override
-            void onUpSwipe() {
-            }
-
-            @Override
-            void onDownSwipe() {
-            }
-
+        SwipeDetector swipeDetector = new SwipeDetector() {
             @Override
             void onRightSwipe() {
                 prevQuestion(null);
@@ -104,17 +98,18 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
             void onClick() {
             }
         };
-        questionTextView.setOnTouchListener(activitySwipeDetector);
-        fillerView.setOnTouchListener(activitySwipeDetector);
-        for (int i = 0; i < answersTextView.length; i++)
-            answersTextView[i].setOnTouchListener(activitySwipeDetector);
+
+        questionTextView.setOnTouchListener(swipeDetector);
+        fillerView.setOnTouchListener(swipeDetector);
+        for (TextView tv : answersTextView)
+            tv.setOnTouchListener(swipeDetector);
 
         Bundle b = getIntent().getExtras();
-        TwoDSerializable s = TwoDSerializable.getSingletonObject();
-        answers = s.getArray();
-        questions = b.getStringArray(TestsActivity.QUESTIONS);
-        rightAnswers = b.getIntArray(TestsActivity.RIGHT_ANSWERS);
-        userAnswers = b.getIntArray(TestsActivity.USER_ANSWERS);
+
+        Parcelable[] parcelableArray = b.getParcelableArray(TestsActivity.QUESTIONS);
+        if (parcelableArray != null)
+            questions = Arrays.copyOf(parcelableArray, parcelableArray.length, Question[].class);
+
         index = 0;
         redraw();
     }

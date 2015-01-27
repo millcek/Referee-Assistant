@@ -3,20 +3,20 @@ package cz.upol.vojami04.refereeassistant.tests;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import java.util.Arrays;
 
 import cz.upol.vojami04.refereeassistant.R;
 
 
 public class TestsExamEvaluationActivity extends ActionBarActivity {
 
-    private String[] questions;
-    private String[][] answers;
-    private int[] rightAnswers;
-    private int[] userAnswers;
+    private Question[] questions;
     private int wrongAnswersCount;
     Button buttonWrongQuestions;
     Button buttonAllQuestions;
@@ -24,35 +24,20 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
 
     public void startBrowsingAllQuestions(View view) {
         Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
-        TwoDSerializable s = TwoDSerializable.getSingletonObject();
-        s.setArray(answers);
         intent.putExtra(TestsActivity.QUESTIONS, questions);
-        intent.putExtra(TestsActivity.USER_ANSWERS, userAnswers);
-        intent.putExtra(TestsActivity.RIGHT_ANSWERS, rightAnswers);
         startActivity(intent);
     }
 
     public void startBrowsingWrongQuestions(View view) {
-        String[] wrongQuestions = new String[wrongAnswersCount];
-        String[][] wrongAnswers = new String[wrongAnswersCount][];
-        int[] wrongUserAnswers = new int[wrongAnswersCount];
-        int[] wrongRightAnswers = new int[wrongAnswersCount];
+        Question[] wrongQuestions = new Question[wrongAnswersCount];
         int index = 0;
-        for (int i = 0; i < questions.length; i++)
-            if (userAnswers[i] != rightAnswers[i]) {
-                wrongQuestions[index] = questions[i];
-                wrongAnswers[index] = answers[i];
-                wrongUserAnswers[index] = userAnswers[i];
-                wrongRightAnswers[index] = rightAnswers[i];
+        for (Question q : questions)
+            if (!q.isCorrectlyAnswered()) {
+                wrongQuestions[index] = q;
                 index++;
             }
-
         Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
-        TwoDSerializable s = TwoDSerializable.getSingletonObject();
-        s.setArray(wrongAnswers);
         intent.putExtra(TestsActivity.QUESTIONS, wrongQuestions);
-        intent.putExtra(TestsActivity.USER_ANSWERS, wrongUserAnswers);
-        intent.putExtra(TestsActivity.RIGHT_ANSWERS, wrongRightAnswers);
         startActivity(intent);
     }
 
@@ -74,16 +59,14 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
         TextView textViewErrorsCount = (TextView) findViewById(R.id.textViewErrorsCount);
 
         Bundle b = getIntent().getExtras();
-        TwoDSerializable s = TwoDSerializable.getSingletonObject();
-        answers = s.getArray();
-        questions = b.getStringArray(TestsActivity.QUESTIONS);
-        rightAnswers = b.getIntArray(TestsActivity.RIGHT_ANSWERS);
-        userAnswers = b.getIntArray(TestsActivity.USER_ANSWERS);
+        Parcelable[] parcelableArray = b.getParcelableArray(TestsActivity.QUESTIONS);
+        if (parcelableArray != null)
+            questions = Arrays.copyOf(parcelableArray, parcelableArray.length, Question[].class);
         minutes = b.getInt(TestsActivity.TIME);
 
         wrongAnswersCount = 0;
-        for (int i = 0; i < userAnswers.length; i++)
-            if (userAnswers[i] != rightAnswers[i])
+        for (Question q : questions)
+            if (!q.isCorrectlyAnswered())
                 wrongAnswersCount++;
 
         int percentage = 100 / questions.length * wrongAnswersCount;
@@ -95,6 +78,5 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
             textViewErrorsCount.setTextColor(getResources().getColor(R.color.right_answer));
             buttonWrongQuestions.setEnabled(false);
         }
-
     }
 }
