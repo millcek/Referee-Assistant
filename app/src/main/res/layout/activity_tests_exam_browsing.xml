@@ -5,7 +5,7 @@
     android:divider="@drawable/horizontal_divider_1"
     android:orientation="vertical"
     android:showDividers="middle"
-    tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamBrowsingActivity">
+    tools:context="cz.vojacekmilan.refereeassistant.tests.TestsExamBrowsingActivity">
 
     <ScrollView
         android:id="@+id/scrollView"
@@ -73,29 +73,28 @@
     </ScrollView>
 
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:divider="@drawable/vertical_divider_1"
-        android:dividerPadding="12dip"
-        android:orientation="horizontal"
-        android:showDividers="middle">
+        android:dividerPadding="12dip">
 
         <Button
-            android:id="@+id/previousButton"
+            android:id="@+id/prevButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
             android:onClick="prevQuestion"
             android:text="@string/previous" />
 
         <Button
             android:id="@+id/nextButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
             android:onClick="nextQuestion"
             android:text="@string/next" />
     </LinearLayout>

@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 
-import cz.upol.vojami04.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.R;
 
 
 public class TestsActivity extends ActionBarActivity {
@@ -29,7 +29,7 @@ public class TestsActivity extends ActionBarActivity {
     }
 
     public void startTestsBrowsing(View view) {
-        Intent intent = new Intent(this, TestsBrowsingActivity.class);
+        Intent intent = new Intent(this, TestsPracticeActivity.class);
         startActivity(intent);
     }
 

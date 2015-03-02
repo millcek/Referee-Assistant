@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant;
+package cz.vojacekmilan.refereeassistant;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

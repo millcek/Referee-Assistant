@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,7 +6,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.NumberPicker;
 
-import cz.upol.vojami04.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.R;
 
 
 public class TestsExamLauncherActivity extends ActionBarActivity {

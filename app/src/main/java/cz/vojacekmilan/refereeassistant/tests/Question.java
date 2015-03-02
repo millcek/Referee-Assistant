@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -14,6 +14,7 @@ public class Question implements Parcelable {
     private Answer[] answers;
 
     public Question() {
+        answers = new Answer[4];
     }
 
     public Question(Parcel in) {
@@ -104,9 +105,7 @@ public class Question implements Parcelable {
 
     public boolean isCorrectlyAnswered() {
         Answer a = getCorrectAnswer();
-        if (a == null)
-            return false;
-        return a.isUsers();
+        return a != null && a.isUsers();
     }
 
     public void mixUpAnswers() {
@@ -115,5 +114,13 @@ public class Question implements Parcelable {
         for (int i = 0; i < answers.length; i++)
             mixedUpAnswers[i] = answers[(i + random) % answers.length];
         answers = mixedUpAnswers;
+    }
+
+    public void addAnswer(Answer answer) {
+        for (int i = 0; i < answers.length; i++)
+            if (answers[i] == null) {
+                answers[i] = answer;
+                return;
+            }
     }
 }

@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.view.MotionEvent;
 import android.view.View;

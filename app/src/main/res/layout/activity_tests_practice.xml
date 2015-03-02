@@ -5,7 +5,7 @@
     android:divider="@drawable/horizontal_divider_1"
     android:orientation="vertical"
     android:showDividers="middle"
-    tools:context="cz.upol.vojami04.refereeassistant.tests.TestsBrowsingActivity">
+    tools:context="cz.vojacekmilan.refereeassistant.tests.TestsPracticeActivity">
 
     <ScrollView
         android:id="@+id/scrollView"
@@ -72,8 +72,8 @@
                     android:padding="@dimen/default_padding" />
             </RadioGroup>
 
-            <TextView
-                android:id="@+id/evaluationTextView"
+            <View
+                android:id="@+id/fillerView"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
@@ -85,17 +85,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:divider="@drawable/vertical_divider_1"
-        android:dividerPadding="12dip"
-        android:orientation="horizontal"
-        android:showDividers="middle">
+        style="?android:attr/buttonBarStyle"
+        android:orientation="horizontal">
 
         <Button
-            android:id="@+id/previousButton"
+            android:id="@+id/prevButton"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
+            style="?android:attr/buttonBarButtonStyle"
             android:onClick="prevQuestion"
             android:text="@string/previous" />
 
@@ -104,7 +102,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?android:attr/selectableItemBackground"
+            style="?android:attr/buttonBarButtonStyle"
             android:onClick="nextQuestion"
             android:text="@string/next" />
     </LinearLayout>

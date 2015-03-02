@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import java.util.Arrays;
 
-import cz.upol.vojami04.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.R;
 
 public class TestsExamBrowsingActivity extends ActionBarActivity {
     private Question[] questions;
@@ -67,13 +67,9 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tests_exam_browsing);
-
+    private void initialize(){
         nextButton = (Button) findViewById(R.id.nextButton);
-        prevButton = (Button) findViewById(R.id.previousButton);
+        prevButton = (Button) findViewById(R.id.prevButton);
         answersTextView = new TextView[4];
         answersTextView[0] = (TextView) findViewById(R.id.textViewAnswer1);
         answersTextView[1] = (TextView) findViewById(R.id.textViewAnswer2);
@@ -82,6 +78,14 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         questionTextView = (TextView) findViewById(R.id.questionTextView);
         scrollView = (ScrollView) findViewById(R.id.scrollView);
         fillerView = findViewById(R.id.fillerView);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_tests_exam_browsing);
+
+        initialize();
 
         SwipeDetector swipeDetector = new SwipeDetector() {
             @Override

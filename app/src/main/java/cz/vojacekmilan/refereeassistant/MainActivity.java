@@ -1,35 +1,38 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant;
 
-import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import cz.upol.vojami04.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.results.ResultsActivity;
+import cz.vojacekmilan.refereeassistant.tests.TestsActivity;
 
+public class MainActivity extends ActionBarActivity {
 
-public class TestsBrowsingActivity extends ActionBarActivity {
-    // TODO
-//    nacte se vzdy urcity pocet otazek (50), musi se pamatovat vsechny pro prohlizeni zpet a i vsechny odpovedi
-    // nejdriv dodelat tridu pro otazky :-))
-    private int pos;
-    private int wrongCount;
+    public void startTestsActivity(View view) {
+        Intent intent = new Intent(this, TestsActivity.class);
+        startActivity(intent);
+    }
+
+    public void startResultsActivity(View view) {
+        Intent intent = new Intent(this, ResultsActivity.class);
+        startActivity(intent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tests_browsing);
+        setContentView(R.layout.activity_main);
     }
 
-    private void redraw() {
-
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_tests_browsing, menu);
+        getMenuInflater().inflate(R.menu.menu_home, menu);
         return true;
     }
 
@@ -46,14 +49,5 @@ public class TestsBrowsingActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public void saveAnswer(View view) {
-    }
-
-    public void nextQuestion(View view) {
-    }
-
-    public void prevQuestion(View view) {
     }
 }

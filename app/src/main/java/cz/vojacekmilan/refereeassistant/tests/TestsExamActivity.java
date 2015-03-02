@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,12 +14,11 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import cz.upol.vojami04.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.R;
 
 public class TestsExamActivity extends ActionBarActivity {
     private Question[] questions;
@@ -30,7 +29,7 @@ public class TestsExamActivity extends ActionBarActivity {
     Button previousButton;
     Button nextButton;
     RadioGroup answersRadioGroup;
-    RadioButton[] radioButtons;
+    RadioButton[] answersRadioButton;
     TextView questionTextView;
     TextView timerTextView;
 
@@ -39,22 +38,21 @@ public class TestsExamActivity extends ActionBarActivity {
     private int minutes;
 
     private void redraw() {
-
         previousButton.setEnabled(index != 0);
         nextButton.setText(getString((index == questions.length - 1) ? R.string.evaluate : (R.string.next)));
 
         questionTextView.setText(String.format("[%d/%d] %s", index + 1, questions.length, questions[index]));
         answersRadioGroup.clearCheck();
-        for (int i = 0; i < radioButtons.length; i++) {
+        for (int i = 0; i < answersRadioButton.length; i++) {
             if (questions[index].getAnswers().length > i) {
                 if (questions[index].getAnswer(i).isUsers())
-                    radioButtons[i].setChecked(true);
-                radioButtons[i].setText(questions[index].getAnswer(i).toString());
-                radioButtons[i].setVisibility(View.VISIBLE);
-                radioButtons[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT));
+                    answersRadioButton[i].setChecked(true);
+                answersRadioButton[i].setText(questions[index].getAnswer(i).toString());
+                answersRadioButton[i].setVisibility(View.VISIBLE);
+                answersRadioButton[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT));
             } else {
-                radioButtons[i].setVisibility(View.INVISIBLE);
-                radioButtons[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, 0));
+                answersRadioButton[i].setVisibility(View.INVISIBLE);
+                answersRadioButton[i].setLayoutParams(new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, 0));
             }
         }
         scrollView.pageScroll(View.FOCUS_UP);
@@ -81,21 +79,15 @@ public class TestsExamActivity extends ActionBarActivity {
     }
 
     public void saveAnswer(View view) {
-        for (int i = 0; i < radioButtons.length; i++) {
+        for (int i = 0; i < answersRadioButton.length; i++) {
             if (i >= questions[index].getAnswers().length)
                 return;
-            questions[index].getAnswer(i).setUsers(radioButtons[i].isChecked());
+            questions[index].getAnswer(i).setUsers(answersRadioButton[i].isChecked());
         }
     }
 
     private void generateQuestions(int questionCount) {
         DataBaseHelper myDbHelper = new DataBaseHelper(this);
-
-        try {
-            myDbHelper.createDataBase();
-        } catch (IOException ioe) {
-            throw new Error("Unable to create database");
-        }
         myDbHelper.openDataBase();
 
         SQLiteDatabase db = myDbHelper.getReadableDatabase();
@@ -169,17 +161,18 @@ public class TestsExamActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_exam);
 
+        scrollView = (ScrollView) findViewById(R.id.scrollView);
+        previousButton = (Button) findViewById(R.id.prevButton);
         nextButton = (Button) findViewById(R.id.nextButton);
-        previousButton = (Button) findViewById(R.id.previousButton);
         answersRadioGroup = (RadioGroup) findViewById(R.id.answersRadioGroup);
-        radioButtons = new RadioButton[4];
-        radioButtons[0] = (RadioButton) findViewById(R.id.radioButton1);
-        radioButtons[1] = (RadioButton) findViewById(R.id.radioButton2);
-        radioButtons[2] = (RadioButton) findViewById(R.id.radioButton3);
-        radioButtons[3] = (RadioButton) findViewById(R.id.radioButton4);
+        answersRadioButton = new RadioButton[4];
         questionTextView = (TextView) findViewById(R.id.questionTextView);
         timerTextView = (TextView) findViewById(R.id.timerTextView);
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
+
+        answersRadioButton[0] = (RadioButton) findViewById(R.id.radioButton1);
+        answersRadioButton[1] = (RadioButton) findViewById(R.id.radioButton2);
+        answersRadioButton[2] = (RadioButton) findViewById(R.id.radioButton3);
+        answersRadioButton[3] = (RadioButton) findViewById(R.id.radioButton4);
 
         SwipeDetector swipeDetector = new SwipeDetector() {
 

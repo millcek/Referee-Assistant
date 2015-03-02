@@ -2,11 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:divider="@drawable/horizontal_divider_1"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:showDividers="middle"
-    tools:context="cz.upol.vojami04.refereeassistant.tests.TestsExamEvaluationActivity">
+    tools:context="cz.vojacekmilan.refereeassistant.tests.TestsExamEvaluationActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,7 +34,6 @@
         android:id="@+id/buttonWrongQuestions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
         android:onClick="startBrowsingWrongQuestions"
         android:text="@string/browse_wrong_questions" />
 
@@ -44,14 +41,12 @@
         android:id="@+id/buttonAllQuestions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
         android:onClick="startBrowsingAllQuestions"
         android:text="@string/browse_all_questions" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
         android:onClick="startExam"
         android:text="@string/new_exam" />
 

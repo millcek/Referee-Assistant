@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -10,6 +10,11 @@ public class Answer implements Parcelable {
     private boolean isUsers;
 
     public Answer() {
+    }
+
+    public Answer(String text, boolean isCorrect) {
+        this.text = text;
+        this.isCorrect = isCorrect;
     }
 
     public Answer(Parcel in) {

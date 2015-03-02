@@ -1,4 +1,4 @@
-package cz.upol.vojami04.refereeassistant.tests;
+package cz.vojacekmilan.refereeassistant.tests;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import java.util.Arrays;
 
-import cz.upol.vojami04.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.R;
 
 
 public class TestsExamEvaluationActivity extends ActionBarActivity {
@@ -69,9 +69,9 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
             if (!q.isCorrectlyAnswered())
                 wrongAnswersCount++;
 
-        int percentage = 100 / questions.length * wrongAnswersCount;
+        float percentage = 100 / questions.length * wrongAnswersCount;
         if (percentage > 0) {
-            textViewErrorsCount.setText(String.format("%d (%d%%)", wrongAnswersCount, percentage));
+            textViewErrorsCount.setText(String.format("%d (~%d%%)", wrongAnswersCount, Math.round(percentage)));
             textViewErrorsCount.setTextColor(Color.RED);
         } else {
             textViewErrorsCount.setText(String.format("%d", wrongAnswersCount));
