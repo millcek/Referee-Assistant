@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import cz.vojacekmilan.refereeassistant.DatabaseHelper;
 import cz.vojacekmilan.refereeassistant.R;
 
 public class TestsExamActivity extends ActionBarActivity {
@@ -61,8 +62,8 @@ public class TestsExamActivity extends ActionBarActivity {
     public void nextQuestion(View view) {
         if (index == questions.length - 1) {
             Intent intent = new Intent(this, TestsExamEvaluationActivity.class);
-            intent.putExtra(TestsActivity.QUESTIONS, questions);
-            intent.putExtra(TestsActivity.TIME, minutes);
+            intent.putExtra(TestsFragment.QUESTIONS, questions);
+            intent.putExtra(TestsFragment.TIME, minutes);
             stoppedTimer = true;
             startActivity(intent);
             finish();
@@ -87,10 +88,10 @@ public class TestsExamActivity extends ActionBarActivity {
     }
 
     private void generateQuestions(int questionCount) {
-        DataBaseHelper myDbHelper = new DataBaseHelper(this);
-        myDbHelper.openDataBase();
+        DatabaseHelper databaseHelper = new DatabaseHelper(this, TestsFragment.DB_NAME);
+        databaseHelper.openDataBase();
 
-        SQLiteDatabase db = myDbHelper.getReadableDatabase();
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
         List<Integer> randomValues = new LinkedList<>();
 
         questions = new Question[questionCount];
@@ -100,7 +101,7 @@ public class TestsExamActivity extends ActionBarActivity {
 
         for (int i = 0; i < questionCount; i++) {
             questions[i] = new Question();
-            do n = random.nextInt(TestsActivity.DB_QUESTIONS_COUNT) + 1;
+            do n = random.nextInt(TestsFragment.DB_QUESTIONS_COUNT) + 1;
             while (randomValues.contains(n));
             randomValues.add(n);
             queryStringBuilder.append(" _id=").append(n).append((i != questionCount - 1) ? " OR" : "");
@@ -143,7 +144,7 @@ public class TestsExamActivity extends ActionBarActivity {
         }
 
         db.close();
-        myDbHelper.close();
+        databaseHelper.close();
     }
 
     private void fillAnswers(int index, List<String> listAnswers, int correct) {
@@ -193,12 +194,12 @@ public class TestsExamActivity extends ActionBarActivity {
         questionTextView.setOnTouchListener(swipeDetector);
         timerTextView.setOnTouchListener(swipeDetector);
 
-        generateQuestions(getIntent().getExtras().getInt(TestsActivity.QUESTIONS_COUNT));
+        generateQuestions(getIntent().getExtras().getInt(TestsFragment.QUESTIONS_COUNT));
 
         index = 0;
         redraw();
 
-        minutes = getIntent().getExtras().getInt(TestsActivity.TIME);
+        minutes = getIntent().getExtras().getInt(TestsFragment.TIME);
         startTime = SystemClock.uptimeMillis() + (minutes * 60 * 1000);
         customHandler.postDelayed(updateTimerThread, 0);
         stoppedTimer = false;

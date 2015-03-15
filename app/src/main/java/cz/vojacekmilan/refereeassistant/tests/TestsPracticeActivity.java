@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import cz.vojacekmilan.refereeassistant.DatabaseHelper;
 import cz.vojacekmilan.refereeassistant.R;
 
 
@@ -118,7 +119,7 @@ public class TestsPracticeActivity extends ActionBarActivity {
         Random random = new Random();
         int randomInt;
         do {
-            randomInt = random.nextInt(TestsActivity.DB_QUESTIONS_COUNT);
+            randomInt = random.nextInt(TestsFragment.DB_QUESTIONS_COUNT);
         } while (generatedQuestions.contains(randomInt));
         generatedQuestions.add(randomInt);
 
@@ -126,9 +127,9 @@ public class TestsPracticeActivity extends ActionBarActivity {
     }
 
     private Question getQuestionFromDB(int id) {
-        DataBaseHelper myDbHelper = new DataBaseHelper(this);
-        myDbHelper.openDataBase();
-        SQLiteDatabase db = myDbHelper.getReadableDatabase();
+        DatabaseHelper databaseHelper = new DatabaseHelper(this, TestsFragment.DB_NAME);
+        databaseHelper.openDataBase();
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
 
         int maxLength = 50;
         if (generatedQuestions.size() > maxLength)
@@ -145,7 +146,7 @@ public class TestsPracticeActivity extends ActionBarActivity {
             outputQuestion.addAnswer(new Answer(answersCursor.getString(0), answersCursor.getInt(1) == 1));
         answersCursor.close();
         db.close();
-        myDbHelper.close();
+        databaseHelper.close();
         return outputQuestion;
     }
 

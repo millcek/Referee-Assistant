@@ -3,6 +3,7 @@
     package="cz.vojacekmilan.refereeassistant">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -10,37 +11,35 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_home"></activity>
-        <activity
-            android:name="cz.vojacekmilan.refereeassistant.tests.TestsActivity"
-            android:label="@string/app_name" />
-        <activity
-            android:name="cz.vojacekmilan.refereeassistant.tests.TestsExamActivity"
+            android:name=".tests.TestsExamActivity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:label="@string/title_activity_tests_exam" />
         <activity
             android:name=".tests.TestsPracticeActivity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-            android:label="@string/title_activity_tests_browsing"></activity>
+            android:label="@string/title_activity_tests_browsing" />
         <activity
-            android:name="cz.vojacekmilan.refereeassistant.tests.TestsExamEvaluationActivity"
-            android:label="@string/title_activity_tests_exam_evaluation" />
-        <activity
-            android:name="cz.vojacekmilan.refereeassistant.tests.TestsExamBrowsingActivity"
+            android:name=".tests.TestsExamEvaluationActivity"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:label="@string/title_activity_tests_exam_evaluation" />
         <activity
-            android:name="cz.vojacekmilan.refereeassistant.tests.TestsExamLauncherActivity"
+            android:name=".tests.TestsExamBrowsingActivity"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+            android:label="@string/title_activity_tests_exam_evaluation" />
+        <activity
+            android:name=".tests.TestsExamLauncherActivity"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:label="@string/title_activity_tests_exam_launcher" />
         <activity
-            android:name="cz.vojacekmilan.refereeassistant.results.ResultsActivity"
-            android:label="@string/title_activity_results">
+            android:name=".MainActivity"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
+            android:label="@string/title_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
     </application>
 

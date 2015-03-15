@@ -1,5 +1,9 @@
 package cz.vojacekmilan.refereeassistant;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.widget.Toast;
+
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.PrettyHtmlSerializer;
@@ -215,9 +219,10 @@ public class Utils {
     public static int subStringCount(String string, String subString) {
         int count = 0;
         while (string.contains(subString)) {
-            string = string.substring(string.indexOf(subString)+1);
+            string = string.substring(string.indexOf(subString) + 1);
             count++;
         }
         return count;
     }
+
 }

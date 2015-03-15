@@ -33,8 +33,8 @@ public class TestsExamLauncherActivity extends ActionBarActivity {
 
     public void startExam(View view){
         Intent intent = new Intent(this, TestsExamActivity.class);
-        intent.putExtra(TestsActivity.QUESTIONS_COUNT, questionsCountNumberPicker.getValue());
-        intent.putExtra(TestsActivity.TIME, timeNumberPicker.getValue());
+        intent.putExtra(TestsFragment.QUESTIONS_COUNT, questionsCountNumberPicker.getValue());
+        intent.putExtra(TestsFragment.TIME, timeNumberPicker.getValue());
         startActivity(intent);
         finish();
     }

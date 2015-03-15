@@ -24,7 +24,7 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
 
     public void startBrowsingAllQuestions(View view) {
         Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
-        intent.putExtra(TestsActivity.QUESTIONS, questions);
+        intent.putExtra(TestsFragment.QUESTIONS, questions);
         startActivity(intent);
     }
 
@@ -37,14 +37,14 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
                 index++;
             }
         Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
-        intent.putExtra(TestsActivity.QUESTIONS, wrongQuestions);
+        intent.putExtra(TestsFragment.QUESTIONS, wrongQuestions);
         startActivity(intent);
     }
 
     public void startExam(View view) {
         Intent intent = new Intent(this, TestsExamActivity.class);
-        intent.putExtra(TestsActivity.QUESTIONS_COUNT, questions.length);
-        intent.putExtra(TestsActivity.TIME, minutes);
+        intent.putExtra(TestsFragment.QUESTIONS_COUNT, questions.length);
+        intent.putExtra(TestsFragment.TIME, minutes);
         startActivity(intent);
         finish();
     }
@@ -59,10 +59,10 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
         TextView textViewErrorsCount = (TextView) findViewById(R.id.textViewErrorsCount);
 
         Bundle b = getIntent().getExtras();
-        Parcelable[] parcelableArray = b.getParcelableArray(TestsActivity.QUESTIONS);
+        Parcelable[] parcelableArray = b.getParcelableArray(TestsFragment.QUESTIONS);
         if (parcelableArray != null)
             questions = Arrays.copyOf(parcelableArray, parcelableArray.length, Question[].class);
-        minutes = b.getInt(TestsActivity.TIME);
+        minutes = b.getInt(TestsFragment.TIME);
 
         wrongAnswersCount = 0;
         for (Question q : questions)

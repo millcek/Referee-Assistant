@@ -110,7 +110,7 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
 
         Bundle b = getIntent().getExtras();
 
-        Parcelable[] parcelableArray = b.getParcelableArray(TestsActivity.QUESTIONS);
+        Parcelable[] parcelableArray = b.getParcelableArray(TestsFragment.QUESTIONS);
         if (parcelableArray != null)
             questions = Arrays.copyOf(parcelableArray, parcelableArray.length, Question[].class);
 
