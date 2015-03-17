@@ -8,7 +8,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
-import android.view.MenuItem;
 
 import cz.vojacekmilan.refereeassistant.results.LeagueFragment;
 import cz.vojacekmilan.refereeassistant.results.Region;
@@ -107,11 +106,9 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void loadLeague(int id) {
-        String title = selectName(id, "leagues");
-
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.container, LeagueFragment.newInstance(id));
-        mTitle = title;
+        mTitle = selectName(id, "leagues");
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }

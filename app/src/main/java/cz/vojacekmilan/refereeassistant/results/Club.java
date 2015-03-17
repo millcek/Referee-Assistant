@@ -29,6 +29,10 @@ public class Club {
         this.pointsTruth = pointsTruth;
     }
 
+    public Club(String name) {
+        this.name = name;
+    }
+
     public int getRank() {
         return rank;
     }
@@ -116,6 +120,26 @@ public class Club {
     public String getSqlInsert(int idLeagues) {
         return String.format("INSERT INTO clubs (rank, name, winnings, draws, losses, scored_goals, received_goals, points_truth, id_leagues) VALUES (%d, '%s', %d, %d, %d, %d, %d, %d, %d);",
                 rank, name, winnings, draws, losses, scoredGoals, receivedGoals, pointsTruth, idLeagues);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Club club = (Club) o;
+        return draws == club.draws && losses == club.losses && pointsTruth == club.pointsTruth && receivedGoals == club.receivedGoals && scoredGoals == club.scoredGoals && winnings == club.winnings && name.equals(club.name);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + winnings;
+        result = 31 * result + draws;
+        result = 31 * result + losses;
+        result = 31 * result + scoredGoals;
+        result = 31 * result + receivedGoals;
+        result = 31 * result + pointsTruth;
+        return result;
     }
 
     @Override

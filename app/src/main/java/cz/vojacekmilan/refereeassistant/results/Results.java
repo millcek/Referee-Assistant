@@ -1,25 +1,25 @@
 package cz.vojacekmilan.refereeassistant.results;
 
-import android.util.Log;
+import android.database.sqlite.SQLiteDatabase;
 
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.XPatherException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
-import static cz.vojacekmilan.refereeassistant.Utils.getCleanTagNodes;
-import static cz.vojacekmilan.refereeassistant.Utils.getSerializedHtml;
-import static cz.vojacekmilan.refereeassistant.Utils.getStringXpath;
-import static cz.vojacekmilan.refereeassistant.Utils.subStringCount;
+import static cz.vojacekmilan.refereeassistant.Utils.*;
 
 /**
  * Created by milan on 17.2.15.
  */
 public class Results {
-    private static final String CHARSET = "iso-8859-2";
+    private static final Logger LOGGER = Logger.getLogger(Results.class.getName());
+    public static final String CHARSET = "iso-8859-2";
 
     private List<String> visitedLinks;
     private List<Region> regions;
@@ -45,11 +45,6 @@ public class Results {
                     this.leagues.add(getLeague(s));
             }
         }
-    }
-
-    public League getClubs(League league) throws MalformedURLException, XPatherException {
-        league.setClubs(getClubs(String.format("%s&show=Aktual", league.getUrlString())));
-        return league;
     }
 
     private TagNode getMenu(TagNode root) {
@@ -79,7 +74,6 @@ public class Results {
         String name = getStringXpath(root, "//title/text()");
         if (name.contains(" - "))
             name = name.substring(name.indexOf(" - ") + 3);
-        Log.i("milda","region "+ name);
         return new Region(name, subRegions, leagues);
     }
 
@@ -128,57 +122,9 @@ public class Results {
         return new League(name, url, null, null);
     }
 
-    private List<Club> getClubs(String url) throws MalformedURLException, XPatherException {
-        List<Club> clubs = new LinkedList<>();
-        TagNode root = getCleanTagNodes(new URL(url), CHARSET);
-        root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[2]", "utf-8"));
-        String htmlTable = getSerializedHtml(root, "//tr[@bgcolor='#f8f8f8']") + "\n" + getSerializedHtml(root, "//tr[@bgcolor='#ffffff']");
-        String format = "%empty %name %empty %wins %draws %losses %score %empty %empty %pointstruth";
-        while (htmlTable.length() > 0) {
-            if (!htmlTable.contains("</tr>"))
-                break;
-            String row = htmlTable.substring(0, htmlTable.indexOf("</tr>"));
-            htmlTable = htmlTable.substring(htmlTable.indexOf("</tr>") + 5);
-            String rowFormat = format;
-            Club newClub = new Club();
-            while (rowFormat.contains("%") && row.contains("</td>")) {
-                rowFormat = rowFormat.substring(rowFormat.indexOf("%") + 1);
-                String actual;
-                String node = row.substring(0, row.indexOf("</td>"));
-                node = node.replaceAll("<.*?>", "").replaceAll("\n", " ").trim();
-                row = row.substring(row.indexOf("</td>") + 5);
-                if (rowFormat.contains("%"))
-                    actual = rowFormat.substring(0, rowFormat.indexOf("%")).trim().toLowerCase();
-                else
-                    actual = rowFormat.trim().toLowerCase();
-                switch (actual) {
-                    case "name":
-                        newClub.setName(node);
-                        break;
-                    case "wins":
-                        newClub.setWinnings(Integer.valueOf(node));
-                        break;
-                    case "draws":
-                        newClub.setDraws(Integer.valueOf(node));
-                        break;
-                    case "losses":
-                        newClub.setLosses(Integer.valueOf(node));
-                        break;
-                    case "score":
-                        if (node.contains(":")) {
-                            newClub.setScoredGoals(Integer.valueOf(node.substring(0, node.indexOf(":")).trim()));
-                            newClub.setReceivedGoals(Integer.valueOf(node.substring(1 + node.indexOf(":")).trim()));
-                        }
-                        break;
-                    case "pointstruth":
-                        newClub.setPointsTruth(Integer.valueOf(node.replace("(", "").replace(")", "").trim()));
-                        break;
-                }
-            }
-            clubs.add(newClub);
-        }
-        return clubs;
-    }
+
+
+
 
     public List<Region> getRegions() {
         return regions;
@@ -195,4 +141,6 @@ public class Results {
     public void setLeagues(List<League> leagues) {
         this.leagues = leagues;
     }
+
+
 }
