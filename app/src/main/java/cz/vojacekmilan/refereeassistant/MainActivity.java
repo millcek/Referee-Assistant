@@ -3,6 +3,8 @@ package cz.vojacekmilan.refereeassistant;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -39,11 +41,12 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.popBackStack();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         switch (position) {
             case 0:
                 fragmentTransaction.replace(R.id.container, RegionFragment.newInstance(0));
-                loadLeague(5);
                 break;
             case 1:
                 fragmentTransaction.replace(R.id.container, RegionFragment.newInstance(0));
@@ -52,7 +55,6 @@ public class MainActivity extends ActionBarActivity
                 fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
                 break;
         }
-        fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
         String[] titles = getResources().getStringArray(R.array.nav_drawer_items);
         if (position < titles.length)
