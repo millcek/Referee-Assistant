@@ -52,7 +52,6 @@ public class Utils {
         try {
             return new HtmlCleaner(props).clean(url);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return null;

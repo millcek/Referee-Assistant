@@ -1,5 +1,7 @@
 package cz.vojacekmilan.refereeassistant.results;
 
+import android.util.Log;
+
 /**
  * Created by milan on 27.2.15.
  */
@@ -118,8 +120,8 @@ public class Club {
     }
 
     public String getSqlInsert(int idLeagues) {
-        return String.format("INSERT INTO clubs (rank, name, winnings, draws, losses, scored_goals, received_goals, points_truth, id_leagues) VALUES (%d, '%s', %d, %d, %d, %d, %d, %d, %d);",
-                rank, name, winnings, draws, losses, scoredGoals, receivedGoals, pointsTruth, idLeagues);
+        return String.format("INSERT INTO clubs (name, winnings, draws, losses, scored_goals, received_goals, points_truth, id_leagues) VALUES ('%s', %d, %d, %d, %d, %d, %d, %d);",
+                name, winnings, draws, losses, scoredGoals, receivedGoals, pointsTruth, idLeagues);
     }
 
     @Override

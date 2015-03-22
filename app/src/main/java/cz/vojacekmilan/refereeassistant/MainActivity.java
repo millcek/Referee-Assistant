@@ -3,7 +3,6 @@ package cz.vojacekmilan.refereeassistant;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
@@ -11,13 +10,15 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 
+import java.util.Stack;
+
 import cz.vojacekmilan.refereeassistant.results.LeagueFragment;
 import cz.vojacekmilan.refereeassistant.results.Region;
 import cz.vojacekmilan.refereeassistant.tests.TestsFragment;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks, RegionFragment.RegionFragmentInteractionListener, LeagueFragment.LeagueFragmentInteractionListener {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, RegionFragment.RegionFragmentInteractionListener, LeagueFragment.LeagueFragmentInteractionListener, ClubFragment.ClubFragmentInteractionListener {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -25,6 +26,8 @@ public class MainActivity extends ActionBarActivity
     private NavigationDrawerFragment mNavigationDrawerFragment;
 
     private CharSequence mTitle;
+
+    private Stack<String> titlesStack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,28 +40,40 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (titlesStack.size() > 0)
+            titlesStack.pop();
+        if (titlesStack.size() > 0)
+            setTitle(titlesStack.pop());
+        else
+            setTitle("");
+        super.onBackPressed();
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.popBackStack();
+        for (int i = 0; i < fragmentManager.getBackStackEntryCount(); ++i)
+            fragmentManager.popBackStack();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         switch (position) {
             case 0:
-                fragmentTransaction.replace(R.id.container, RegionFragment.newInstance(0));
+                loadRegion(0);
                 break;
             case 1:
-                fragmentTransaction.replace(R.id.container, RegionFragment.newInstance(0));
+                loadRegion(0);
                 break;
             case 2:
                 fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
                 break;
         }
         fragmentTransaction.commit();
-        String[] titles = getResources().getStringArray(R.array.nav_drawer_items);
-        if (position < titles.length)
-            mTitle = titles[position];
+        if (mTitle.length() == 0)
+            setTitle("");
     }
 
     public void restoreActionBar() {
@@ -66,6 +81,17 @@ public class MainActivity extends ActionBarActivity
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
+    }
+
+    private void setTitle(String title) {
+        if (title.length() > 0)
+            mTitle = title;
+        else
+            mTitle = getString(R.string.title_activity_main);
+        if (titlesStack == null)
+            titlesStack = new Stack<>();
+        titlesStack.push(title);
+        restoreActionBar();
     }
 
     @Override
@@ -100,19 +126,33 @@ public class MainActivity extends ActionBarActivity
     public void loadRegion(Region region) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.container, RegionFragment.newInstance(region.getId()));
-        mTitle = region.getName();
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        setTitle(region.getName());
     }
 
+
+    @Override
+    public void loadClub(int id) {
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.container, ClubFragment.newInstance(id));
+        fragmentTransaction.addToBackStack(null);
+        restoreActionBar();
+        fragmentTransaction.commit();
+        setTitle(selectName(id, "clubs").replace("&quot;", "\""));
+    }
 
     @Override
     public void loadLeague(int id) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.container, LeagueFragment.newInstance(id));
-        mTitle = selectName(id, "leagues");
+        restoreActionBar();
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
+        setTitle(selectName(id, "leagues"));
     }
 
     @Override
@@ -125,12 +165,12 @@ public class MainActivity extends ActionBarActivity
         databaseHelper.openDataBase();
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM " + table + " WHERE _id = " + id, null);
-        String title = "";
+        String name = "";
         if (cursor.moveToNext())
-            title = cursor.getString(0);
+            name = cursor.getString(0);
         cursor.close();
         db.close();
         databaseHelper.close();
-        return title;
+        return name;
     }
 }

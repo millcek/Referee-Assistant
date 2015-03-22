@@ -1,6 +1,7 @@
 package cz.vojacekmilan.refereeassistant.results;
 
-import org.joda.time.DateTime;
+
+import java.util.Date;
 
 /**
  * Created by milan on 27.2.15.
@@ -12,13 +13,13 @@ public class Result {
     private int awayScore;
     private int homeScoreHalf;
     private int awayScoreHalf;
-    private DateTime dateTime;
+    private Date dateTime;
     private int viewers;
     private String note;
     private int round;
 
 
-    public Result(Club home, Club away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf, DateTime dateTime) {
+    public Result(Club home, Club away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf, Date dateTime) {
         this.home = home;
         this.away = away;
         this.homeScore = homeScore;
@@ -28,7 +29,7 @@ public class Result {
         this.dateTime = dateTime;
     }
 
-    public Result(String home, String away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf, DateTime dateTime) {
+    public Result(String home, String away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf, Date dateTime) {
         this.home = new Club();
         this.home.setName(home);
         this.away = new Club();
@@ -103,20 +104,20 @@ public class Result {
                     this.awayScoreHalf = Integer.valueOf(halfScore.substring(pos + 1));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    this.homeScoreHalf = 0;
-                    this.awayScoreHalf = 0;
+                    this.homeScoreHalf = -1;
+                    this.awayScoreHalf = -1;
                 }
             }
-            try {
-                score = score.replace("(", "").replace(")", "").replace(" ", "").trim();
-                int pos = score.indexOf(":");
-                this.homeScore = Integer.valueOf(score.substring(0, pos));
-                this.awayScore = Integer.valueOf(score.substring(pos + 1));
-            } catch (Exception e) {
-                e.printStackTrace();
-                this.homeScore = 0;
-                this.awayScore = 0;
-            }
+        }
+        try {
+            score = score.replace("(", "").replace(")", "").replace(" ", "").trim();
+            int pos = score.indexOf(":");
+            this.homeScore = Integer.valueOf(score.substring(0, pos));
+            this.awayScore = Integer.valueOf(score.substring(pos + 1));
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.homeScore = 0;
+            this.awayScore = 0;
         }
     }
 
@@ -152,22 +153,25 @@ public class Result {
         this.awayScoreHalf = awayScoreHalf;
     }
 
-    public DateTime getDateTime() {
+    public Date getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(DateTime dateTime) {
+    public void setDateTime(Date dateTime) {
         this.dateTime = dateTime;
     }
 
     public String getSqlInsert(int idLeague, int idClubsHome, int idClubsAway) {
-        return String.format("INSERT INTO results (id_clubs_home, id_clubs_away, home_score, away_score, away_score_half, home_score_half, round, datetime, note, id_leagues) VALUES (%d, %d, %d, %d, %d, %d, %d, %d,'%s', %d);",
-                idClubsHome, idClubsAway, homeScore, awayScore, awayScoreHalf, homeScoreHalf, round, (int) (dateTime.getMillis() / 1000), note, idLeague);
+        if (dateTime == null)
+            dateTime = new Date(0);
+        return String.format("INSERT INTO results (id_clubs_home, id_clubs_away, home_score, away_score, " +
+                        "away_score_half, home_score_half, round, datetime, note, id_leagues) VALUES (%d, %d, %d, %d, %d, %d, %d, %d,'%s', %d);",
+                idClubsHome, idClubsAway, homeScore, awayScore, awayScoreHalf, homeScoreHalf, round, (int) (dateTime.getTime() / 1000), note, idLeague);
     }
 
     @Override
     public String toString() {
-        return "\nResult{" +
+        return "Result{" +
                 "home=" + home +
                 ", away=" + away +
                 ", homeScore=" + homeScore +
@@ -175,6 +179,23 @@ public class Result {
                 ", homeScoreHalf=" + homeScoreHalf +
                 ", awayScoreHalf=" + awayScoreHalf +
                 ", dateTime=" + dateTime +
+                ", viewers=" + viewers +
+                ", note='" + note + '\'' +
+                ", round=" + round +
                 "}\n";
+    }
+
+    public String getScore() {
+        if (homeScoreHalf == -1 || awayScoreHalf == -1)
+            return String.format("%d:%d", homeScore, awayScore);
+        else
+            return String.format("%d:%d (%d:%d)", homeScore, awayScore, homeScoreHalf, awayScoreHalf);
+    }
+
+    public void setScore(int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf) {
+        this.homeScore = homeScore;
+        this.awayScore = awayScore;
+        this.homeScoreHalf = homeScoreHalf;
+        this.awayScoreHalf = awayScoreHalf;
     }
 }

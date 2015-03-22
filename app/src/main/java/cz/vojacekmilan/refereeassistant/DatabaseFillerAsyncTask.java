@@ -57,7 +57,6 @@ public class DatabaseFillerAsyncTask extends AsyncTask<String, String, String> {
 
     @Override
     protected void onPostExecute(String s) {
-        Log.i("milda", s);
     }
 
     @Override

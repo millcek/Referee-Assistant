@@ -2,6 +2,7 @@ package cz.vojacekmilan.refereeassistant.results;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import org.htmlcleaner.TagNode;
 import org.htmlcleaner.XPatherException;
@@ -22,6 +23,8 @@ import static cz.vojacekmilan.refereeassistant.Utils.getSerializedHtml;
  * Created by milan on 27.2.15.
  */
 public class League {
+    private static final String DEFAULT_FORMAT = "%empty %name %empty %wins %draws %losses %score %empty %empty %pointstruth";
+
     private int id;
     private String name;
     private String urlString;
@@ -112,15 +115,19 @@ public class League {
             boolean homeSet = false;
             boolean awaySet = false;
             for (Club club : clubs) {
-                if (result.getHome().getName().equals(club.getName())) {
-                    result.setHome(club);
-                    homeSet = true;
+                try {
+                    if (result.getHome().getName().equals(club.getName())) {
+                        result.setHome(club);
+                        homeSet = true;
+                    }
+                    if (result.getAway().getName().equals(club.getName())) {
+                        result.setAway(club);
+                        awaySet = true;
+                    }
+                    if (homeSet && awaySet) break;
+                } catch (Exception e) {
+                    Log.i("League", e.getMessage());
                 }
-                if (result.getAway().getName().equals(club.getName())) {
-                    result.setAway(club);
-                    awaySet = true;
-                }
-                if (homeSet && awaySet) break;
             }
         }
     }
@@ -134,65 +141,84 @@ public class League {
         String resultsUrl = league.getUrlString();
         if (clubsUrl.contains("&"))
             clubsUrl = clubsUrl.substring(0, clubsUrl.indexOf("&")) + "&show=Aktual";
+        else
+            clubsUrl += "&show=Aktual";
         if (resultsUrl.contains("&"))
             resultsUrl = resultsUrl.substring(0, resultsUrl.indexOf("&")) + "&show=Vysledky";
+        else
+            resultsUrl += "&show=Vysledky";
         TagNode rootClubs = getCleanTagNodes(new URL(clubsUrl), Results.CHARSET);
         TagNode rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
-        List<Club> clubs = getClubs(rootClubs);//TODO zmenit url
+        List<Club> clubs = getClubs(rootClubs);
         List<Result> results = getResults(rootResults);
         league.setClubs(clubs);
         league.setResults(results);
+        league.pairClubs();
         return league;
     }
 
     private static List<Result> getResults(TagNode root) {
         List<Result> results = new ArrayList<>();
+        Log.i("League getResults", getSerializedHtml(root));
         root = getCleanTagNodes(
-                getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));//TODO
+                getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));
         try {
-            for (Object o : root.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
-                root.removeChild(o);
-            Result result = new Result();
-            for (Object o : root.evaluateXPath("//tr")) {
-                TagNode tn = (TagNode) o;
-                int i = 0;
-                for (Object ignored : tn.evaluateXPath("td"))
-                    i++;
-                if (i == 6 && !tn.hasAttribute("bgcolor")) {
-                    i = 0;
-                    if (result.getHome() == null) {
+            int round = 1;
+            for (TagNode tableTagNode : root.getElementsByName("table", true)) {
+                for (Object o : tableTagNode.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
+                    tableTagNode.removeChild(o);
+                Result result = new Result();
+                for (TagNode rowTagNode : tableTagNode.getElementsByName("tr", true)) {
+                    int i = 0;
+                    for (Object ignored : rowTagNode.evaluateXPath("td"))
+                        i++;
+                    if (i == 6 && !rowTagNode.hasAttribute("bgcolor")) {
+                        i = 0;
+                        if (result.getHome() != null) {
+                            results.add(result);
+                            result = new Result();
+                        }
+                        result.setRound(round);
+                        for (Object object : rowTagNode.evaluateXPath("td/text()")) {
+                            String s = object.toString().replace("\n", "");
+                            while (s.contains("  "))
+                                s = s.replace("  ", " ");
+                            s = s.trim();
+                            try {
+                                switch (i) {
+                                    case 1:
+                                        result.setHome(new Club(s));
+                                        break;
+                                    case 2:
+                                        result.setAway(new Club(s));
+                                        break;
+                                    case 3:
+                                        result.setScore(s);
+                                        break;
+                                    case 4:
+                                        try {
+                                            result.setViewers(Integer.valueOf(s));
+                                        } catch (NumberFormatException e) {
+                                            result.setViewers(-1);
+                                        }
+                                    case 5:
+                                        result.setNote(s);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            i++;
+                        }
+                    } else if (rowTagNode.getChildTags().length > 0 && rowTagNode.getChildTags()[0].hasAttribute("bgcolor")) {
+                        if (result.getNote() == null || result.getNote().trim().equals(""))
+                            result.setNote(Utils.getStringXpath(rowTagNode, "text()"));
+                        else
+                            result.setNote(result.getNote() + ", " + Utils.getStringXpath(rowTagNode, "text()"));
                         results.add(result);
                         result = new Result();
                     }
-                    for (Object object : tn.evaluateXPath("td/text()")) {
-                        String s = object.toString().replace("\n", "");
-                        while (s.contains("  "))
-                            s = s.replace("  ", " ");
-                        s = s.trim();
-                        try {
-                            switch (i) {
-                                case 1:
-                                    result.setHome(new Club(s));
-                                    break;
-                                case 2:
-                                    result.setAway(new Club(s));
-                                    break;
-                                case 3:
-                                    result.setScore(s);
-                                    break;
-                                case 4:
-                                    result.setViewers(Integer.valueOf(s));
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        i++;
-                    }
-                } else if (tn.getChildTags().length > 0 && tn.getChildTags()[0].hasAttribute("bgcolor")) {
-                    result.setNote(Utils.getStringXpath(tn, "text()"));
-                    results.add(result);
-                    result = new Result();
                 }
+                round++;
             }
         } catch (XPatherException e) {
             e.printStackTrace();
@@ -204,7 +230,7 @@ public class League {
         List<Club> clubs = new LinkedList<>();
         root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[2]", "utf-8"));
         String htmlTable = getSerializedHtml(root, "//tr[@bgcolor='#f8f8f8']") + "\n" + getSerializedHtml(root, "//tr[@bgcolor='#ffffff']");
-        String format = "%empty %name %empty %wins %draws %losses %score %empty %empty %pointstruth";
+        String format = DEFAULT_FORMAT;
         while (htmlTable.length() > 0) {
             if (!htmlTable.contains("</tr>"))
                 break;
@@ -252,11 +278,12 @@ public class League {
     }
 
     public static void removeClubsAndResultsFromDB(SQLiteDatabase db, int id) {
-        db.execSQL("DELETE FROM clubs WHERE id_leagues = " + id, null);
-        db.execSQL("DELETE FROM results WHERE id_leagues = " + id, null);
+        db.execSQL("DELETE FROM clubs WHERE id_leagues = " + id);
+        db.execSQL("DELETE FROM results WHERE id_leagues = " + id);//TODO udelat update - u vseho, i u tymu a u dalsich 3,14covin
     }
 
     public void updateClubsAndResults(SQLiteDatabase db, int id) {
+        db.execSQL("UPDATE leagues SET updated = datetime('now') WHERE _id = " + id);
         removeClubsAndResultsFromDB(db, id);
         insertIntoDB(db, id);
     }
@@ -264,12 +291,16 @@ public class League {
     public void insertIntoDB(SQLiteDatabase db, int id) {
         insertClubs(db, id);
         HashMap<String, Integer> clubsHashMap = new HashMap<>();
-        Cursor cursor = db.rawQuery("SELECT _id, name FROM clubs WHERE id_league = " + id, null);
+        Cursor cursor = db.rawQuery("SELECT _id, name FROM clubs WHERE id_leagues = " + id, null);
         while (cursor.moveToNext())
             clubsHashMap.put(cursor.getString(1), cursor.getInt(0));
         cursor.close();
         for (Result result : results)
-            db.execSQL(result.getSqlInsert(id, clubsHashMap.get(result.getHome().getName()), clubsHashMap.get(result.getAway().getName())));
+            try {
+                db.execSQL(result.getSqlInsert(id, clubsHashMap.get(result.getHome().getName()), clubsHashMap.get(result.getAway().getName())));
+            } catch (Exception e) {
+                Log.w("League error", e.getMessage());
+            }
     }
 
     private void insertClubs(SQLiteDatabase db, int id) {
