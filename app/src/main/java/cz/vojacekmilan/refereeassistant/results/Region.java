@@ -8,6 +8,7 @@ import java.util.List;
 public class Region {
     private int id;
     private String name;
+    private boolean favourite;
     private List<Region> subRegions;
     private List<League> leagues;
 
@@ -61,8 +62,20 @@ public class Region {
         this.leagues = leagues;
     }
 
+    public boolean isFavourite() {
+        return favourite;
+    }
+
+    public void setFavourite(boolean favourite) {
+        this.favourite = favourite;
+    }
+
+    public void negFavourite() {
+        this.favourite = !favourite;
+    }
+
     @Override
     public String toString() {
-        return name;
+        return name + (favourite ? " *" : "");
     }
 }

@@ -1,6 +1,7 @@
 package cz.vojacekmilan.refereeassistant;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -12,13 +13,14 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import cz.vojacekmilan.refereeassistant.results.Region;
 
-public class RegionFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class RegionFragment extends Fragment implements AbsListView.OnItemClickListener, AdapterView.OnItemLongClickListener {
     public static final String DB_NAME = "results";
     public static final String ID_REGION = "id_region";
     private RegionFragmentInteractionListener mListener;
@@ -61,6 +63,8 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
 
         regionListView.setOnItemClickListener(this);
 
+        regionListView.setOnItemLongClickListener(this);
+
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setRefreshing(false);
         swipeRefreshLayout.setEnabled(false);
@@ -77,9 +81,12 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
         }
         boundary = i;
         cursor.close();
-        cursor = db.rawQuery("SELECT _id, name FROM regions WHERE id_regions = " + idRegion + ((idRegion == 0) ? " OR favourite=1 ORDER BY favourite DESC" : ""), null);
+        cursor = db.rawQuery("SELECT _id, name, favourite FROM regions WHERE id_regions = " + idRegion + ((idRegion == 0) ? " OR favourite=1 ORDER BY favourite DESC" : ""), null);
         while (cursor.moveToNext()) {
-            regions.add(new Region(cursor.getInt(0), cursor.getString(1)));
+            Region region = new Region(cursor.getInt(0), cursor.getString(1));
+            if (cursor.getInt(2) == 1)
+                region.setFavourite(cursor.getInt(2) == 1);
+            regions.add(region);
         }
         cursor.close();
         db.close();
@@ -112,10 +119,31 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
         }
     }
 
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        if (position >= boundary) {
+            regions.get(position).negFavourite();
+            if (mListener != null) {
+                DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
+                databaseHelper.openDataBase();
+                SQLiteDatabase db = databaseHelper.getReadableDatabase();
+                db.execSQL("UPDATE regions SET favourite = " + (regions.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + regions.get(position).getId());
+                db.close();
+                databaseHelper.close();
+                Toast.makeText(mListener.getApplicationContext(), "region " + regions.get(position).getName() + (regions.get(position).isFavourite() ? " přidán do oblíbených" : " odebrán z oblíbených"), Toast.LENGTH_SHORT).show();
+                regionAdapter.notifyDataSetChanged();
+            }
+            return true;
+        }
+        return false;
+    }
+
     public interface RegionFragmentInteractionListener {
         public void loadRegion(Region region);
 
         public void loadLeague(int id);
+
+        public Context getApplicationContext();
     }
 
 }

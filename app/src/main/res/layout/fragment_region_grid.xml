@@ -9,6 +9,6 @@
         android:id="@+id/listRegions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:numColumns="2" />
+        android:numColumns="1" />
 
 </FrameLayout>

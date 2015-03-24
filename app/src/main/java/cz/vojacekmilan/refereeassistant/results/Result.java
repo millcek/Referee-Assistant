@@ -1,7 +1,7 @@
 package cz.vojacekmilan.refereeassistant.results;
 
 
-import java.util.Date;
+import android.util.Log;
 
 /**
  * Created by milan on 27.2.15.
@@ -13,23 +13,21 @@ public class Result {
     private int awayScore;
     private int homeScoreHalf;
     private int awayScoreHalf;
-    private Date dateTime;
     private int viewers;
     private String note;
     private int round;
 
 
-    public Result(Club home, Club away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf, Date dateTime) {
+    public Result(Club home, Club away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf) {
         this.home = home;
         this.away = away;
         this.homeScore = homeScore;
         this.awayScore = awayScore;
         this.homeScoreHalf = homeScoreHalf;
         this.awayScoreHalf = awayScoreHalf;
-        this.dateTime = dateTime;
     }
 
-    public Result(String home, String away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf, Date dateTime) {
+    public Result(String home, String away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf) {
         this.home = new Club();
         this.home.setName(home);
         this.away = new Club();
@@ -38,7 +36,6 @@ public class Result {
         this.awayScore = awayScore;
         this.homeScoreHalf = homeScoreHalf;
         this.awayScoreHalf = awayScoreHalf;
-        this.dateTime = dateTime;
     }
 
     public Result() {
@@ -90,6 +87,8 @@ public class Result {
     }
 
     public void setScore(String score) {
+        this.homeScoreHalf = -1;
+        this.awayScoreHalf = -1;
         if (score.contains("(")) {
             String halfScore = score.substring(score.indexOf("("));
             score = score.substring(0, score.indexOf("("));
@@ -104,8 +103,6 @@ public class Result {
                     this.awayScoreHalf = Integer.valueOf(halfScore.substring(pos + 1));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    this.homeScoreHalf = -1;
-                    this.awayScoreHalf = -1;
                 }
             }
         }
@@ -153,20 +150,10 @@ public class Result {
         this.awayScoreHalf = awayScoreHalf;
     }
 
-    public Date getDateTime() {
-        return dateTime;
-    }
-
-    public void setDateTime(Date dateTime) {
-        this.dateTime = dateTime;
-    }
-
     public String getSqlInsert(int idLeague, int idClubsHome, int idClubsAway) {
-        if (dateTime == null)
-            dateTime = new Date(0);
         return String.format("INSERT INTO results (id_clubs_home, id_clubs_away, home_score, away_score, " +
-                        "away_score_half, home_score_half, round, datetime, note, id_leagues) VALUES (%d, %d, %d, %d, %d, %d, %d, %d,'%s', %d);",
-                idClubsHome, idClubsAway, homeScore, awayScore, awayScoreHalf, homeScoreHalf, round, (int) (dateTime.getTime() / 1000), note, idLeague);
+                        "away_score_half, home_score_half, round, note, id_leagues) VALUES (%d, %d, %d, %d, %d, %d, %d,'%s', %d);",
+                idClubsHome, idClubsAway, homeScore, awayScore, awayScoreHalf, homeScoreHalf, round, note, idLeague);
     }
 
     @Override
@@ -178,7 +165,6 @@ public class Result {
                 ", awayScore=" + awayScore +
                 ", homeScoreHalf=" + homeScoreHalf +
                 ", awayScoreHalf=" + awayScoreHalf +
-                ", dateTime=" + dateTime +
                 ", viewers=" + viewers +
                 ", note='" + note + '\'' +
                 ", round=" + round +

@@ -124,8 +124,11 @@ public class ClubFragment extends Fragment {
         //region TableRow header
         TableRow headTableRow = new TableRow(mListener.getApplicationContext());
         String[] columnNames = new String[]{"Kolo", "Domácí", "Hosté", "Skóre"};//TODO z nastaveni brat sloupce ktere se maji zobrazit
-        for (String s : columnNames)
-            headTableRow.addView(newTableTextView(s));
+        for (String s : columnNames) {
+            TextView textView = newTableTextView(s);
+            textView.setTypeface(null,Typeface.ITALIC);
+            headTableRow.addView(textView);
+        }
         headTableRow.setLayoutParams(tableLayoutParams);
         resultsTableLayout.addView(headTableRow);
         //endregion

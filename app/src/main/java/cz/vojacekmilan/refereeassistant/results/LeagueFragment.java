@@ -19,6 +19,8 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
@@ -78,23 +80,35 @@ public class LeagueFragment extends Fragment {
         view.findViewById(R.id.nextRoundButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (round < lastRound) {
-                    round++;
-                    loadResults();
-                }
+                nextRound();
             }
         });
         view.findViewById(R.id.prevRoundButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (round > 1) {
-                    round--;
-                    loadResults();
-                }
+                prevRound();
             }
         });
         loadLeague();
         return view;
+    }
+
+    private void nextRound() {
+        if (round < lastRound) {
+            round++;
+            loadResults();
+            if (resultsTableLayout.getChildCount() == 1)
+                nextRound();
+        }
+    }
+
+    private void prevRound() {
+        if (round > 1) {
+            round--;
+            loadResults();
+            if (resultsTableLayout.getChildCount() == 1)
+                prevRound();
+        }
     }
 
     @Override
@@ -126,8 +140,11 @@ public class LeagueFragment extends Fragment {
      */
     public interface LeagueFragmentInteractionListener {
         public Context getApplicationContext();
+
         void loadClub(int id);
+
         void loadLeague(int id);
+
         void loadRegion(int id);
     }
 
@@ -209,8 +226,50 @@ public class LeagueFragment extends Fragment {
             loadResults();
         }
         cursor.close();
+        cursor = db.rawQuery("SELECT id_clubs_home, id_clubs_away, datetime, field FROM next_matches WHERE id_leagues = " + idLeague, null);
+        List<NextMatch> nextMatches = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            NextMatch nextMatch = new NextMatch();
+            nextMatch.setIdClubsHome(cursor.getInt(0));
+            nextMatch.setIdClubsAway(cursor.getInt(1));
+            nextMatch.setIdLeagues(idLeague);
+            nextMatch.findClubs(db);
+            nextMatch.setDatetime(new Date(((long) cursor.getInt(2)) * 1000));
+            nextMatch.setField(cursor.getString(3));
+            nextMatches.add(nextMatch);
+        }
+        cursor.close();
         db.close();
         databaseHelper.close();
+        makeNextMatchesTable(nextMatches);
+    }
+
+    private void makeNextMatchesTable(List<NextMatch> nextMatches) {
+        nextMatchesTableLayout.removeAllViews();
+        TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
+                TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
+        TableRow headTableRow = new TableRow(mListener.getApplicationContext());
+        String[] columnNames = new String[]{"Domácí", "Hosté", "Termín", "Hřiště"};
+        for (String s : columnNames) {
+            TextView textView = newTableTextView(s);
+            textView.setTypeface(null, Typeface.ITALIC);
+            headTableRow.addView(textView);
+        }
+        headTableRow.setLayoutParams(tableLayoutParams);
+        nextMatchesTableLayout.addView(headTableRow);
+
+        int i = 0;
+        for (NextMatch nextMatch : nextMatches) {
+            TableRow tableRow = new TableRow(mListener.getApplicationContext());
+            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
+            tableRow.addView(newTableTextView(nextMatch.getClubsHome()));
+            tableRow.addView(newTableTextView(nextMatch.getClubsAway()));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
+            tableRow.addView(newTableTextView(dateFormat.format(nextMatch.getDatetime())));
+            tableRow.addView(newTableTextView(nextMatch.getField()));
+            nextMatchesTableLayout.addView(tableRow);
+            i++;
+        }
     }
 
     private void setUpdate(int dateTime, int nowDateTime) {
@@ -255,7 +314,7 @@ public class LeagueFragment extends Fragment {
         TextView textView = new TextView(mListener.getApplicationContext());
         textView.setLayoutParams(new TableRow.LayoutParams(
                 TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT));
-        textView.setText(text);
+        textView.setText(text.replace("&quot;", "\""));
         textView.setPadding(10, 10, 10, 10);
         textView.setTextAppearance(mListener.getApplicationContext(), android.R.style.TextAppearance_Small);
         textView.setTextColor(Color.BLACK);
@@ -266,19 +325,19 @@ public class LeagueFragment extends Fragment {
         resultsTableLayout.setColumnStretchable(1, true);
         TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
                 TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
-        //region TableRow header
         TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"Kolo", "Domácí", "Hosté", "Skóre"};//TODO z nastaveni brat sloupce ktere se maji zobrazit
-        for (String s : columnNames)
-            headTableRow.addView(newTableTextView(s));
+        String[] columnNames = new String[]{"Domácí", "Hosté", "Výsledek"};
+        for (String s : columnNames) {
+            TextView textView = newTableTextView(s);
+            textView.setTypeface(null, Typeface.ITALIC);
+            headTableRow.addView(textView);
+        }
         headTableRow.setLayoutParams(tableLayoutParams);
         resultsTableLayout.addView(headTableRow);
-        //endregion
         int i = 0;
         for (final Result result : results) {
             TableRow tableRow = new TableRow(mListener.getApplicationContext());
             tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
-            tableRow.addView(newTableTextView(String.valueOf(result.getRound())));
             TextView homeTextView = newTableTextView(result.getHome().getName().replace("&quot;", "\""));
             TextView awayTextView = newTableTextView(result.getAway().getName().replace("&quot;", "\""));
             if (result.getHomeScore() > result.getAwayScore())
@@ -301,8 +360,11 @@ public class LeagueFragment extends Fragment {
 
         TableRow headTableRow = new TableRow(mListener.getApplicationContext());
         String[] columnNames = new String[]{"#", "Klub", "Z", "V", "R", "P", "S", "B", "(Prav)"};//TODO z nastaveni brat sloupce ktere se maji zobrazit
-        for (String s : columnNames)
-            headTableRow.addView(newTableTextView(s));
+        for (String s : columnNames) {
+            TextView textView = newTableTextView(s);
+            textView.setTypeface(null, Typeface.ITALIC);
+            headTableRow.addView(textView);
+        }
         headTableRow.setLayoutParams(tableLayoutParams);
         tableTableLayout.addView(headTableRow);
 

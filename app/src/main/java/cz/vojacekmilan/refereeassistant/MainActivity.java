@@ -50,7 +50,7 @@ public class MainActivity extends ActionBarActivity
         if (titlesStack.size() > 0)
             setTitle(titlesStack.pop());
         else
-            setTitle("");
+            finish();
         super.onBackPressed();
     }
 
@@ -60,6 +60,8 @@ public class MainActivity extends ActionBarActivity
         for (int i = 0; i < fragmentManager.getBackStackEntryCount(); ++i)
             fragmentManager.popBackStack();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        if (titlesStack != null)
+            titlesStack.clear();
         switch (position) {
             case 0:
                 loadRegion(0);
@@ -69,11 +71,12 @@ public class MainActivity extends ActionBarActivity
                 break;
             case 2:
                 fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
+                setTitle(R.string.title_activity_tests_exam);
                 break;
         }
         fragmentTransaction.commit();
         if (mTitle.length() == 0)
-            setTitle("");
+            setTitle(null);
     }
 
     public void restoreActionBar() {
@@ -84,13 +87,16 @@ public class MainActivity extends ActionBarActivity
     }
 
     private void setTitle(String title) {
-        if (title.length() > 0)
-            mTitle = title;
-        else
-            mTitle = getString(R.string.title_activity_main);
         if (titlesStack == null)
             titlesStack = new Stack<>();
-        titlesStack.push(title);
+        if (title != null) {
+            if (title.length() > 0)
+                mTitle = title;
+            else
+                mTitle = getString(R.string.title_activity_main);
+            titlesStack.push(title);
+        } else
+            mTitle = getString(R.string.title_activity_main);
         restoreActionBar();
     }
 

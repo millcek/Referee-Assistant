@@ -9,6 +9,7 @@ import org.htmlcleaner.XPatherException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,6 +31,7 @@ public class League {
     private String urlString;
     private List<Result> results;
     private List<Club> clubs;
+    private List<NextMatch> nextMatches;
 
     public League(int id, String name, String urlString, List<Result> results, List<Club> clubs) {
         this.id = id;
@@ -57,6 +59,14 @@ public class League {
 
     public League() {
 
+    }
+
+    public List<NextMatch> getNextMatches() {
+        return nextMatches;
+    }
+
+    public void setNextMatches(List<NextMatch> nextMatches) {
+        this.nextMatches = nextMatches;
     }
 
     public int getId() {
@@ -150,27 +160,77 @@ public class League {
         TagNode rootClubs = getCleanTagNodes(new URL(clubsUrl), Results.CHARSET);
         TagNode rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
         List<Club> clubs = getClubs(rootClubs);
+        List<NextMatch> nextMatches = getNextMatches(rootClubs);
         List<Result> results = getResults(rootResults);
         league.setClubs(clubs);
         league.setResults(results);
+        league.setNextMatches(nextMatches);
         league.pairClubs();
         return league;
     }
 
+    private static List<NextMatch> getNextMatches(TagNode root) {
+        List<NextMatch> nextMatches = new ArrayList<>();
+        root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[3]"));
+        try {
+            for (Object o : root.evaluateXPath("//tr[@bgcolor='bbbbbb']"))
+                root.removeChild(o);
+            for (Object o : root.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
+                root.removeChild(o);
+            for (Object o : root.evaluateXPath("//tr")) {
+                TagNode trTagNode = (TagNode) o;
+                int i = 0;
+                for (Object ignored : trTagNode.evaluateXPath("//td"))
+                    i++;
+                if (i == 6) {
+                    i = 0;
+                    NextMatch nextMatch = new NextMatch();
+                    try {
+                        for (Object tdObject : trTagNode.evaluateXPath("//td/text()")) {
+                            String s = tdObject.toString().trim();
+                            switch (i) {
+                                case 1:
+                                    nextMatch.setClubsHome(s);
+                                    break;
+                                case 2:
+                                    nextMatch.setClubsAway(s);
+                                    break;
+                                case 3:
+                                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
+                                    nextMatch.setDatetime(dateFormat.parse(s));
+                                    break;
+                                case 5:
+                                    nextMatch.setField(s);
+                            }
+                            i++;
+                        }
+                        nextMatches.add(nextMatch);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return nextMatches;
+    }
+
     private static List<Result> getResults(TagNode root) {
         List<Result> results = new ArrayList<>();
-        Log.i("League getResults", getSerializedHtml(root));
         root = getCleanTagNodes(
                 getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));
         try {
             int round = 1;
-            for (TagNode tableTagNode : root.getElementsByName("table", true)) {
+            Result result = new Result();
+            for (Object tableObject : root.evaluateXPath("//table")) {
+                TagNode tableTagNode = (TagNode) tableObject;
                 for (Object o : tableTagNode.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
                     tableTagNode.removeChild(o);
-                Result result = new Result();
-                for (TagNode rowTagNode : tableTagNode.getElementsByName("tr", true)) {
+                for (Object rowObject : tableTagNode.evaluateXPath("//tr")) {
+                    TagNode rowTagNode = (TagNode) rowObject;
                     int i = 0;
-                    for (Object ignored : rowTagNode.evaluateXPath("td"))
+                    for (Object ignored : rowTagNode.evaluateXPath("//td"))
                         i++;
                     if (i == 6 && !rowTagNode.hasAttribute("bgcolor")) {
                         i = 0;
@@ -179,7 +239,7 @@ public class League {
                             result = new Result();
                         }
                         result.setRound(round);
-                        for (Object object : rowTagNode.evaluateXPath("td/text()")) {
+                        for (Object object : rowTagNode.evaluateXPath("//td/text()")) {
                             String s = object.toString().replace("\n", "");
                             while (s.contains("  "))
                                 s = s.replace("  ", " ");
@@ -220,6 +280,9 @@ public class League {
                 }
                 round++;
             }
+            if (!results.contains(result) && result.getHome() != null)
+                results.add(result);
+
         } catch (XPatherException e) {
             e.printStackTrace();
         }
@@ -280,6 +343,7 @@ public class League {
     public static void removeClubsAndResultsFromDB(SQLiteDatabase db, int id) {
         db.execSQL("DELETE FROM clubs WHERE id_leagues = " + id);
         db.execSQL("DELETE FROM results WHERE id_leagues = " + id);//TODO udelat update - u vseho, i u tymu a u dalsich 3,14covin
+        db.execSQL("DELETE FROM next_matches WHERE id_leagues = " + id);//TODO udelat update - u vseho, i u tymu a u dalsich 3,14covin
     }
 
     public void updateClubsAndResults(SQLiteDatabase db, int id) {
@@ -298,6 +362,16 @@ public class League {
         for (Result result : results)
             try {
                 db.execSQL(result.getSqlInsert(id, clubsHashMap.get(result.getHome().getName()), clubsHashMap.get(result.getAway().getName())));
+            } catch (Exception e) {
+                Log.w("League error", e.getMessage());
+            }
+        for (NextMatch nextMatch : nextMatches)
+            try {
+                Log.i("insertIntoDB", nextMatch.toString());
+                nextMatch.setIdClubsHome(clubsHashMap.get(nextMatch.getClubsHome()));
+                nextMatch.setIdClubsAway(clubsHashMap.get(nextMatch.getClubsAway()));
+                nextMatch.setIdLeagues(id);
+                db.execSQL(nextMatch.getSqlInsert());
             } catch (Exception e) {
                 Log.w("League error", e.getMessage());
             }
