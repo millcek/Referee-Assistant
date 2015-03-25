@@ -281,28 +281,24 @@ public class LeagueFragment extends Fragment {
         now.setTime(new Date((long) nowDateTime * 1000));
 
         String updated;
-        int[] date = {
-                now.get(Calendar.YEAR) - updatedCalendar.get(Calendar.YEAR),
-                now.get(Calendar.MONTH) - updatedCalendar.get(Calendar.MONTH),
-                now.get(Calendar.DAY_OF_MONTH) - updatedCalendar.get(Calendar.DAY_OF_MONTH),
-                now.get(Calendar.HOUR) - updatedCalendar.get(Calendar.HOUR),
-                now.get(Calendar.MINUTE) - updatedCalendar.get(Calendar.MINUTE),
-                now.get(Calendar.SECOND) - updatedCalendar.get(Calendar.SECOND)
-        };
-        char[] dateFormat = {'r', 'm', 'd', 'h', 'm', 's'};
+        int year = now.get(Calendar.YEAR) - updatedCalendar.get(Calendar.YEAR);
+        int month = now.get(Calendar.MONTH) - updatedCalendar.get(Calendar.MONTH);
+        int day = now.get(Calendar.DAY_OF_MONTH) - updatedCalendar.get(Calendar.DAY_OF_MONTH);
 
-        StringBuilder updatedStringBuilder = new StringBuilder();
-        boolean toWrite = false;
-
-        for (int i = 0; i < date.length; i++) {
-            if (date[i] != 0 && !toWrite)
-                toWrite = true;
-            if (toWrite)
-                updatedStringBuilder.append(Math.abs(date[i])).append(dateFormat[i]).append(" ");
+        if (year == 0) {
+            if (month == 0 && day == 0) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+                updated = "v " + dateFormat.format(updatedDate);
+            } else {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
+                updated = dateFormat.format(updatedDate);
+            }
+        }else{
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            updated = dateFormat.format(updatedDate);
         }
-        updated = updatedStringBuilder.toString().trim();
 
-        updatedTextView.setText("Aktualizováno " + (updated.length() == 0 ? "nyní" : "před " + updated));
+        updatedTextView.setText("Aktualizováno " + updated);
     }
 
     private void updateLeague(int id) {

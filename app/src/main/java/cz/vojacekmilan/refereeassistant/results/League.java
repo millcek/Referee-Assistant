@@ -367,7 +367,6 @@ public class League {
             }
         for (NextMatch nextMatch : nextMatches)
             try {
-                Log.i("insertIntoDB", nextMatch.toString());
                 nextMatch.setIdClubsHome(clubsHashMap.get(nextMatch.getClubsHome()));
                 nextMatch.setIdClubsAway(clubsHashMap.get(nextMatch.getClubsAway()));
                 nextMatch.setIdLeagues(id);

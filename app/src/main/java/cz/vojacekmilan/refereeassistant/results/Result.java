@@ -1,8 +1,6 @@
 package cz.vojacekmilan.refereeassistant.results;
 
 
-import android.util.Log;
-
 /**
  * Created by milan on 27.2.15.
  */

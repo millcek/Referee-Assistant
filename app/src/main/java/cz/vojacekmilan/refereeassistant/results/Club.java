@@ -19,6 +19,11 @@ public class Club {
     public Club() {
     }
 
+    public Club(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public Club(int id, int rank, String name, int winnings, int draws, int losses, int scoredGoals, int receivedGoals, int pointsTruth) {
         this.id = id;
         this.rank = rank;

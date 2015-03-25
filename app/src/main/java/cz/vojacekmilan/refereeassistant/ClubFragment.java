@@ -2,13 +2,13 @@ package cz.vojacekmilan.refereeassistant;
 
 
 import android.app.Activity;
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -91,11 +91,11 @@ public class ClubFragment extends Fragment {
             result.setRound(cursor.getInt(0));
             Cursor homeCursor = db.rawQuery("SELECT name FROM clubs WHERE _id = " + cursor.getInt(1), null);
             if (homeCursor.moveToNext())
-                result.setHome(new Club(homeCursor.getString(0)));
+                result.setHome(new Club(cursor.getInt(1), homeCursor.getString(0)));
             homeCursor.close();
             Cursor awayCursor = db.rawQuery("SELECT name FROM clubs WHERE _id = " + cursor.getInt(2), null);
             if (awayCursor.moveToNext())
-                result.setAway(new Club(awayCursor.getString(0)));
+                result.setAway(new Club(cursor.getInt(2), awayCursor.getString(0)));
             awayCursor.close();
             result.setScore(cursor.getInt(3), cursor.getInt(4), cursor.getInt(5), cursor.getInt(6));
             results.add(result);
@@ -121,26 +121,38 @@ public class ClubFragment extends Fragment {
         resultsTableLayout.setColumnStretchable(1, true);
         TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
                 TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
-        //region TableRow header
         TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"Kolo", "Domácí", "Hosté", "Skóre"};//TODO z nastaveni brat sloupce ktere se maji zobrazit
+        String[] columnNames = new String[]{"Kolo", "Domácí", "Hosté", "Skóre"};
         for (String s : columnNames) {
             TextView textView = newTableTextView(s);
-            textView.setTypeface(null,Typeface.ITALIC);
+            textView.setTypeface(null, Typeface.ITALIC);
             headTableRow.addView(textView);
         }
         headTableRow.setLayoutParams(tableLayoutParams);
         resultsTableLayout.addView(headTableRow);
-        //endregion
         int i = 0;
         for (final Result result : results) {
             TableRow tableRow = new TableRow(mListener.getApplicationContext());
-            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
             tableRow.addView(newTableTextView(String.valueOf(result.getRound())));
             tableRow.addView(newTableTextView(result.getHome().getName().replace("&quot;", "\"")));
             tableRow.addView(newTableTextView(result.getAway().getName().replace("&quot;", "\"")));
+            int homeScore, awayScore;
+            if (result.getHome().getId() == idClub) {
+                homeScore = result.getHomeScore();
+                awayScore = result.getAwayScore();
+            } else {
+                awayScore = result.getHomeScore();
+                homeScore = result.getAwayScore();
+            }
+            if (homeScore > awayScore)
+                tableRow.setBackgroundColor(getResources().getColor(R.color.green));
+            else if (homeScore < awayScore)
+                tableRow.setBackgroundColor(getResources().getColor(R.color.red));
+            else
+                tableRow.setBackgroundColor(getResources().getColor(R.color.yellow));
+
             TextView resultTextView = newTableTextView(result.getScore());
-            resultTextView.setTypeface(null, Typeface.BOLD);//TODO pridat tlacitka klubu a akce
+            resultTextView.setTypeface(null, Typeface.BOLD);
             tableRow.addView(resultTextView);
             tableRow.setLayoutParams(tableLayoutParams);
             resultsTableLayout.addView(tableRow);
