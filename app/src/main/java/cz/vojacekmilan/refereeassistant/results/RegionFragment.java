@@ -1,4 +1,4 @@
-package cz.vojacekmilan.refereeassistant;
+package cz.vojacekmilan.refereeassistant.results;
 
 import android.app.Activity;
 import android.content.Context;
@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +17,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import cz.vojacekmilan.refereeassistant.results.Region;
+import cz.vojacekmilan.refereeassistant.DatabaseHelper;
+import cz.vojacekmilan.refereeassistant.R;
 
 public class RegionFragment extends Fragment implements AbsListView.OnItemClickListener, AdapterView.OnItemLongClickListener {
     public static final String DB_NAME = "results";
@@ -26,8 +26,6 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
     private RegionFragmentInteractionListener mListener;
 
     private ArrayAdapter regionAdapter;
-    private AbsListView regionListView;
-    private SwipeRefreshLayout swipeRefreshLayout;
     private List<Region> regions;
     private int idRegion;
     private int boundary;
@@ -43,6 +41,7 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
     public RegionFragment() {
     }
 
+    //TODO tlacitko na hledani
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,16 +57,13 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_result, container, false);
 
-        regionListView = (AbsListView) view.findViewById(R.id.listRegions);
+        AbsListView regionListView = (AbsListView) view.findViewById(R.id.listRegions);
         regionListView.setAdapter(regionAdapter);
 
         regionListView.setOnItemClickListener(this);
 
         regionListView.setOnItemLongClickListener(this);
 
-        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
-        swipeRefreshLayout.setRefreshing(false);
-        swipeRefreshLayout.setEnabled(false);
         regions.clear();
 
         DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);

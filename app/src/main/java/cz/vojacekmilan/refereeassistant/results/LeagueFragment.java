@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -22,13 +23,16 @@ import android.widget.Toast;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import cz.vojacekmilan.refereeassistant.DatabaseHelper;
 import cz.vojacekmilan.refereeassistant.R;
-import cz.vojacekmilan.refereeassistant.RegionFragment;
+import cz.vojacekmilan.refereeassistant.Utils;
 
 public class LeagueFragment extends Fragment {
 
@@ -37,14 +41,19 @@ public class LeagueFragment extends Fragment {
     private int idLeague;
     private int round;
     private int lastRound;
-    //    private LinearLayout linearLayout;
-    private SwipeRefreshLayout swipeRefreshLayout;//TODO pridat pristi zapasy
+    private SwipeRefreshLayout swipeRefreshLayout;
     private TableLayout tableTableLayout;
     private TableLayout nextMatchesTableLayout;
     private TableLayout resultsTableLayout;
     private TextView updatedTextView;
     private TextView roundTextView;
     private ClubsAsyncTask clubsAsyncTask;
+    private ImageButton nextRoundButton;
+    private ImageButton prevRoundButton;
+    private boolean isRefreshing;
+    private SQLiteDatabase db;
+    private DatabaseHelper databaseHelper;
+    public CountDownLatch insertedInDbLatch;
 
     public static LeagueFragment newInstance(int idLeague) {
         LeagueFragment fragment = new LeagueFragment();
@@ -64,50 +73,83 @@ public class LeagueFragment extends Fragment {
             idLeague = getArguments().getInt(ID_LEAGUE);
     }
 
+    private void openDb() {
+        databaseHelper = new DatabaseHelper(mListener.getApplicationContext(), RegionFragment.DB_NAME);
+        databaseHelper.openDataBase();
+        db = databaseHelper.getReadableDatabase();
+    }
+
+    private void closeDb() {
+        db.close();//TODO nekde se nezavira db
+        databaseHelper.close();
+    }
+
+    private void setNextButtonEnabled(boolean enabled) {
+        nextRoundButton.setImageResource(enabled ? R.drawable.arrow_next : R.drawable.arrow_next_off);
+    }
+
+    private void setPrevButtonEnabled(boolean enabled) {
+        prevRoundButton.setImageResource(enabled ? R.drawable.arrow_prev : R.drawable.arrow_prev_off);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_league, container, false);
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setRefreshing(false);
-        swipeRefreshLayout.setEnabled(false);
         clubsAsyncTask = new ClubsAsyncTask();
         tableTableLayout = (TableLayout) view.findViewById(R.id.tableTableLayout);
+        tableTableLayout.setColumnStretchable(1, true);
         nextMatchesTableLayout = (TableLayout) view.findViewById(R.id.nextMatchesTableLayout);
         resultsTableLayout = (TableLayout) view.findViewById(R.id.resultsTableLayout);
+        resultsTableLayout.setColumnStretchable(1, true);
         updatedTextView = (TextView) view.findViewById(R.id.updatedTextView);
         roundTextView = (TextView) view.findViewById(R.id.roundTextView);
-        view.findViewById(R.id.nextRoundButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                nextRound();
-            }
-        });
-        view.findViewById(R.id.prevRoundButton).setOnClickListener(new View.OnClickListener() {
+        prevRoundButton = (ImageButton) view.findViewById(R.id.prevRoundButton);
+        prevRoundButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 prevRound();
             }
         });
+        nextRoundButton = (ImageButton) view.findViewById(R.id.nextRoundButton);
+        nextRoundButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nextRound();
+            }
+        });
+        insertedInDbLatch = new CountDownLatch(0);
         loadLeague();
         return view;
     }
 
     private void nextRound() {
-        if (round < lastRound) {
-            round++;
-            loadResults();
-            if (resultsTableLayout.getChildCount() == 1)
-                nextRound();
+        try {
+            insertedInDbLatch.await();
+            if (round < lastRound) {
+                round++;
+                loadResults();
+                if (resultsTableLayout.getChildCount() == 1)
+                    nextRound();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
     private void prevRound() {
-        if (round > 1) {
-            round--;
-            loadResults();
-            if (resultsTableLayout.getChildCount() == 1)
-                prevRound();
+        try {
+            insertedInDbLatch.await();
+            if (round > 1) {
+                round--;
+                loadResults();
+                if (resultsTableLayout.getChildCount() == 1)
+                    prevRound();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -128,16 +170,23 @@ public class LeagueFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    private void loadClub(Club club) {
+        try {
+            insertedInDbLatch.await();
+            openDb();
+            Cursor cursor = db.rawQuery(String.format("SELECT _id FROM clubs WHERE name = '%s' AND id_leagues = %d", club.getName(), idLeague), null);
+            int id = -1;
+            if (cursor != null && cursor.moveToNext())
+                id = cursor.getInt(0);
+            cursor.close();
+            closeDb();
+            mListener.loadClub(id);
+        } catch (InterruptedException e) {
+            closeDb();
+            e.printStackTrace();
+        }
+    }
+
     public interface LeagueFragmentInteractionListener {
         public Context getApplicationContext();
 
@@ -149,12 +198,8 @@ public class LeagueFragment extends Fragment {
     }
 
     private void loadResults() {
-        if (round < 1) return;
-        roundTextView.setText(round + ". kolo");
         resultsTableLayout.removeAllViews();
-        DatabaseHelper databaseHelper = new DatabaseHelper(mListener.getApplicationContext(), RegionFragment.DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        openDb();
         Cursor cursor = db.rawQuery("SELECT round, id_clubs_home, id_clubs_away, home_score, away_score, home_score_half, away_score_half, note FROM results WHERE id_leagues = " + idLeague + " AND round = " + round, null);
         List<Result> results = new LinkedList<>();
         while (cursor.moveToNext()) {
@@ -162,54 +207,48 @@ public class LeagueFragment extends Fragment {
             result.setRound(cursor.getInt(0));
             Cursor homeCursor = db.rawQuery("SELECT name FROM clubs WHERE _id = " + cursor.getInt(1), null);
             if (homeCursor.moveToNext())
-                result.setHome(new Club(homeCursor.getString(0)));
+                result.setHome(homeCursor.getString(0));
             homeCursor.close();
             Cursor awayCursor = db.rawQuery("SELECT name FROM clubs WHERE _id = " + cursor.getInt(2), null);
             if (awayCursor.moveToNext())
-                result.setAway(new Club(awayCursor.getString(0)));
+                result.setAway(awayCursor.getString(0));
             awayCursor.close();
             result.setScore(cursor.getInt(3), cursor.getInt(4), cursor.getInt(5), cursor.getInt(6));
-            result.setNote(cursor.getString(7));//TODO nejak ukazat poznamku
+            result.setNote(cursor.getString(7));
             results.add(result);
         }
-        makeResultsTable(results);
         cursor.close();
-        db.close();
-        databaseHelper.close();
+        closeDb();
+        makeResultsTable(results);
     }
 
     private void loadLeague() {
         tableTableLayout.removeAllViews();
-        DatabaseHelper databaseHelper = new DatabaseHelper(mListener.getApplicationContext(), RegionFragment.DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT _id, name, winnings, draws, losses, scored_goals, received_goals, points_truth FROM clubs WHERE id_leagues = " + idLeague + " ORDER BY (winnings * 3 + draws) DESC, scored_goals DESC", null);
+        openDb();
+        Cursor cursor = db.rawQuery("SELECT _id, name, winnings, draws, losses, scored_goals, received_goals, points_truth FROM clubs WHERE id_leagues = " + idLeague, null);
         if (cursor.getCount() == 0) {
             Toast.makeText(mListener.getApplicationContext(), "Soutěž dosud nebyla stažena, stahuje se", Toast.LENGTH_SHORT).show();
-            swipeRefreshLayout.setRefreshing(true);
-            clubsAsyncTask = new ClubsAsyncTask();
-            clubsAsyncTask.execute(idLeague);
+            cursor.close();
+            closeDb();
+            updateLeague(idLeague);
         } else {
             Cursor leagueNameCursor = db.rawQuery("SELECT name FROM leagues WHERE _id = " + idLeague, null);
             if (leagueNameCursor.moveToNext())
                 super.getActivity().setTitle(leagueNameCursor.getString(0));
             leagueNameCursor.close();
+
             List<Club> clubs = new LinkedList<>();
             int i = 1;
             while (cursor.moveToNext()) {
                 clubs.add(new Club(cursor.getInt(0), i, cursor.getString(1), cursor.getInt(2), cursor.getInt(3), cursor.getInt(4), cursor.getInt(5), cursor.getInt(6), cursor.getInt(7)));
                 i++;
             }
-            cursor.close();
             makeTable(clubs);
             final int finalId = idLeague;
-            cursor.close();
             cursor = db.rawQuery("SELECT strftime('%s',updated), strftime('%s','now') FROM leagues WHERE _id = " + idLeague, null);
             if (cursor.moveToNext())
                 setUpdate(cursor.getInt(0), cursor.getInt(1));
-            cursor.close();
 
-            swipeRefreshLayout.setRefreshing(false);
             swipeRefreshLayout.setEnabled(true);
             swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -217,16 +256,21 @@ public class LeagueFragment extends Fragment {
                     updateLeague(finalId);
                 }
             });
-        }
-        cursor.close();
-        cursor = db.rawQuery("SELECT MAX(round) FROM results WHERE id_leagues = " + idLeague, null);
-        if (cursor.moveToNext()) {
-            lastRound = cursor.getInt(0);
-            round = cursor.getInt(0);
+            cursor = db.rawQuery("SELECT MAX(round) FROM results WHERE id_leagues = " + idLeague, null);
+            if (cursor.moveToNext()) {
+                lastRound = cursor.getInt(0);
+                round = cursor.getInt(0);
+            }
+            cursor.close();
+            closeDb();
             loadResults();
+            loadNextMatches(idLeague);
         }
-        cursor.close();
-        cursor = db.rawQuery("SELECT id_clubs_home, id_clubs_away, datetime, field FROM next_matches WHERE id_leagues = " + idLeague, null);
+    }
+
+    private void loadNextMatches(int idLeague) {
+        openDb();
+        Cursor cursor = db.rawQuery("SELECT id_clubs_home, id_clubs_away, datetime, field FROM next_matches WHERE id_leagues = " + idLeague + " ORDER BY datetime", null);
         List<NextMatch> nextMatches = new ArrayList<>();
         while (cursor.moveToNext()) {
             NextMatch nextMatch = new NextMatch();
@@ -239,36 +283,44 @@ public class LeagueFragment extends Fragment {
             nextMatches.add(nextMatch);
         }
         cursor.close();
-        db.close();
-        databaseHelper.close();
+        closeDb();
         makeNextMatchesTable(nextMatches);
     }
 
     private void makeNextMatchesTable(List<NextMatch> nextMatches) {
-        nextMatchesTableLayout.removeAllViews();
-        TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
-                TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
-        TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"Domácí", "Hosté", "Termín", "Hřiště"};
-        for (String s : columnNames) {
-            TextView textView = newTableTextView(s);
-            textView.setTypeface(null, Typeface.ITALIC);
-            headTableRow.addView(textView);
-        }
-        headTableRow.setLayoutParams(tableLayoutParams);
-        nextMatchesTableLayout.addView(headTableRow);
+        try {
+            nextMatchesTableLayout.removeAllViews();
+            if (nextMatches.size() == 0) {
+                nextMatchesTableLayout.addView(newTextTableRow("Příští zápasy nejsou k dispozici"));
+                return;
+            }
+            Collections.sort(nextMatches, new NextMatchComparator());
+            TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
+                    TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
+            TableRow headTableRow = new TableRow(mListener.getApplicationContext());
+            String[] columnNames = new String[]{"Domácí", "Hosté", "Termín", "Hřiště"};
+            for (String s : columnNames) {
+                TextView textView = newTableTextView(s);
+                textView.setTypeface(null, Typeface.ITALIC);
+                headTableRow.addView(textView);
+            }
+            headTableRow.setLayoutParams(tableLayoutParams);
+            nextMatchesTableLayout.addView(headTableRow);
 
-        int i = 0;
-        for (NextMatch nextMatch : nextMatches) {
-            TableRow tableRow = new TableRow(mListener.getApplicationContext());
-            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
-            tableRow.addView(newTableTextView(nextMatch.getClubsHome()));
-            tableRow.addView(newTableTextView(nextMatch.getClubsAway()));
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
-            tableRow.addView(newTableTextView(dateFormat.format(nextMatch.getDatetime())));
-            tableRow.addView(newTableTextView(nextMatch.getField()));
-            nextMatchesTableLayout.addView(tableRow);
-            i++;
+            int i = 0;
+            for (NextMatch nextMatch : nextMatches) {
+                TableRow tableRow = new TableRow(mListener.getApplicationContext());
+                tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
+                tableRow.addView(newTableTextView(nextMatch.getClubsHome()));
+                tableRow.addView(newTableTextView(nextMatch.getClubsAway()));
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
+                tableRow.addView(newTableTextView(dateFormat.format(nextMatch.getDatetime())));
+                tableRow.addView(newTableTextView(nextMatch.getField()));
+                nextMatchesTableLayout.addView(tableRow);
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -280,164 +332,240 @@ public class LeagueFragment extends Fragment {
         Calendar now = Calendar.getInstance();
         now.setTime(new Date((long) nowDateTime * 1000));
 
-        String updated;
         int year = now.get(Calendar.YEAR) - updatedCalendar.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH) - updatedCalendar.get(Calendar.MONTH);
         int day = now.get(Calendar.DAY_OF_MONTH) - updatedCalendar.get(Calendar.DAY_OF_MONTH);
 
-        if (year == 0) {
-            if (month == 0 && day == 0) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-                updated = "v " + dateFormat.format(updatedDate);
-            } else {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
-                updated = dateFormat.format(updatedDate);
-            }
-        }else{
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-            updated = dateFormat.format(updatedDate);
-        }
+        SimpleDateFormat dateFormat = null;
+        if (year == 0)
+            dateFormat = (month == 0 && day == 0) ? new SimpleDateFormat("HH:mm") : new SimpleDateFormat("dd.MM. HH:mm");
+        else
+            dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
-        updatedTextView.setText("Aktualizováno " + updated);
+        updatedTextView.setText("Aktualizováno " + dateFormat.format(updatedDate));
     }
 
     private void updateLeague(int id) {
-        clubsAsyncTask = new ClubsAsyncTask();
-        clubsAsyncTask.execute(id);
+        try {
+            isRefreshing = true;
+            swipeRefreshLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    swipeRefreshLayout.setRefreshing(isRefreshing);
+                }
+            });
+            clubsAsyncTask = new ClubsAsyncTask();
+            clubsAsyncTask.execute(id);
+            int time = (int) (System.currentTimeMillis() / 1000);
+            setUpdate(time, time);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(mListener.getApplicationContext(), "Stala se chyba", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private TextView newTableTextView(String text) {
         TextView textView = new TextView(mListener.getApplicationContext());
         textView.setLayoutParams(new TableRow.LayoutParams(
                 TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT));
-        textView.setText(text.replace("&quot;", "\""));
+        if (text != null)
+            textView.setText(text.replace("&quot;", "\""));
         textView.setPadding(10, 10, 10, 10);
         textView.setTextAppearance(mListener.getApplicationContext(), android.R.style.TextAppearance_Small);
         textView.setTextColor(Color.BLACK);
         return textView;
     }
 
-    private void makeResultsTable(List<Result> results) {
-        resultsTableLayout.setColumnStretchable(1, true);
-        TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
-                TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
-        TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"Domácí", "Hosté", "Výsledek"};
-        for (String s : columnNames) {
-            TextView textView = newTableTextView(s);
-            textView.setTypeface(null, Typeface.ITALIC);
-            headTableRow.addView(textView);
-        }
-        headTableRow.setLayoutParams(tableLayoutParams);
-        resultsTableLayout.addView(headTableRow);
-        int i = 0;
-        for (final Result result : results) {
-            TableRow tableRow = new TableRow(mListener.getApplicationContext());
-            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
-            TextView homeTextView = newTableTextView(result.getHome().getName().replace("&quot;", "\""));
-            TextView awayTextView = newTableTextView(result.getAway().getName().replace("&quot;", "\""));
-            if (result.getHomeScore() > result.getAwayScore())
-                homeTextView.setTypeface(null, Typeface.BOLD);
-            else if (result.getHomeScore() < result.getAwayScore())
-                awayTextView.setTypeface(null, Typeface.BOLD);
-            tableRow.addView(homeTextView);
-            tableRow.addView(awayTextView);
-            tableRow.addView(newTableTextView(result.getScore()));
-            tableRow.setLayoutParams(tableLayoutParams);
-            resultsTableLayout.addView(tableRow);
-            i++;
+    private void makeResultsTable(final List<Result> results) {
+        try {
+            setNextButtonEnabled(round < lastRound);
+            setPrevButtonEnabled(round > 1);
+            resultsTableLayout.removeAllViews();
+            if (results.size() == 0) {
+                resultsTableLayout.addView(newTextTableRow("Výsledky nejsou k dispozici"));
+                return;
+            }
+            TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
+                    TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
+            roundTextView.setText(results.get(0).getRound() + ". kolo");
+            TableRow headTableRow = new TableRow(mListener.getApplicationContext());
+            String[] columnNames = new String[]{"Domácí", "Hosté", "Výsledek"};
+            for (String s : columnNames) {
+                TextView textView = newTableTextView(s);
+                textView.setTypeface(null, Typeface.ITALIC);
+                headTableRow.addView(textView);
+            }
+            headTableRow.setLayoutParams(tableLayoutParams);
+            resultsTableLayout.addView(headTableRow);
+            int i = 0;
+            for (final Result result : results) {
+                final TableRow tableRow = new TableRow(mListener.getApplicationContext());
+                tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
+                TextView homeTextView = newTableTextView((result.getHome() != null) ? result.getHome().replace("&quot;", "\"") : "");
+                TextView awayTextView = newTableTextView((result.getAway() != null) ? result.getAway().replace("&quot;", "\"") : "");
+                if (result.getHomeScore() > result.getAwayScore())
+                    homeTextView.setTypeface(null, Typeface.BOLD);
+                else if (result.getHomeScore() < result.getAwayScore())
+                    awayTextView.setTypeface(null, Typeface.BOLD);
+                tableRow.addView(homeTextView);
+                tableRow.addView(awayTextView);
+                tableRow.addView(newTableTextView(result.getScore()));
+                tableRow.setLayoutParams(tableLayoutParams);
+                tableRow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Utils.showPopup(getActivity(), tableRow, result.getNote());
+                    }
+                });
+                resultsTableLayout.addView(tableRow);
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
+    private TableRow newTextTableRow(String text) {
+        TableRow tableRow = new TableRow(mListener.getApplicationContext());
+        tableRow.addView(newTableTextView(text));
+        return tableRow;
+    }
+
     private void makeTable(List<Club> clubs) {
-        tableTableLayout.setColumnStretchable(1, true);
-        TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
-                TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
+        try {
+            tableTableLayout.removeAllViews();
+            if (clubs.size() == 0) {
+                tableTableLayout.addView(newTextTableRow("Tabulka není k dispozici"));
+                return;
+            }
+            Collections.sort(clubs, new ClubComparator());
+            TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
+                    TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
 
-        TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"#", "Klub", "Z", "V", "R", "P", "S", "B", "(Prav)"};//TODO z nastaveni brat sloupce ktere se maji zobrazit
-        for (String s : columnNames) {
-            TextView textView = newTableTextView(s);
-            textView.setTypeface(null, Typeface.ITALIC);
-            headTableRow.addView(textView);
-        }
-        headTableRow.setLayoutParams(tableLayoutParams);
-        tableTableLayout.addView(headTableRow);
+            TableRow headTableRow = new TableRow(mListener.getApplicationContext());
+            String[] columnNames = new String[]{"#", "Klub", "Z", "V", "R", "P", "S", "B", "(Prav)"};//TODO z nastaveni brat sloupce ktere se maji zobrazit
+            for (String s : columnNames) {
+                TextView textView = newTableTextView(s);
+                textView.setTypeface(null, Typeface.ITALIC);
+                headTableRow.addView(textView);
+            }
+            headTableRow.setLayoutParams(tableLayoutParams);
+            tableTableLayout.addView(headTableRow);
 
-        int i = 0;
-        for (final Club club : clubs) {
-            int[] columnValues = club.getColumnValues();
-            TableRow tableRow = new TableRow(mListener.getApplicationContext());
-            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
-            tableRow.addView(newTableTextView(String.valueOf(club.getRank())));
-            tableRow.addView(newTableTextView(club.getName().replace("&quot;", "\"")));
-            for (int value : columnValues)
-                tableRow.addView(newTableTextView(String.valueOf(value)));
-            tableRow.addView(newTableTextView(club.getScore()));
-            TextView pointsTextView = newTableTextView(String.valueOf(club.getPoints()));
-            pointsTextView.setTypeface(null, Typeface.BOLD);
-            pointsTextView.setTextColor(Color.BLACK);
-            tableRow.addView(pointsTextView);
-            tableRow.addView(newTableTextView(String.valueOf(club.getPointsTruth())));
-            tableRow.setLayoutParams(tableLayoutParams);
-            tableRow.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mListener.loadClub(club.getId());
-                }
-            });
-            tableTableLayout.addView(tableRow);
-            i++;
+            int i = 1;
+            for (final Club club : clubs) {
+                int[] columnValues = club.getColumnValues();
+                TableRow tableRow = new TableRow(mListener.getApplicationContext());
+                tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
+                tableRow.addView(newTableTextView(String.valueOf(i)));
+                tableRow.addView(newTableTextView(club.getName().replace("&quot;", "\"")));
+                for (int value : columnValues)
+                    tableRow.addView(newTableTextView(String.valueOf(value)));
+                tableRow.addView(newTableTextView(club.getScore()));
+                TextView pointsTextView = newTableTextView(String.valueOf(club.getPoints()));
+                pointsTextView.setTypeface(null, Typeface.BOLD);
+                pointsTextView.setTextColor(Color.BLACK);
+                tableRow.addView(pointsTextView);
+                tableRow.addView(newTableTextView(String.valueOf(club.getPointsTruth())));
+                tableRow.setLayoutParams(tableLayoutParams);
+                tableRow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (club.getId() > 0)
+                            mListener.loadClub(club.getId());
+                        else
+                            loadClub(club);
+                    }
+                });
+                tableTableLayout.addView(tableRow);
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void onDestroy() {
-        if (clubsAsyncTask != null)
+        if (clubsAsyncTask != null && !clubsAsyncTask.isDoInBackgroundComplete())
             clubsAsyncTask.cancel(true);
         super.onDestroy();
     }
 
     private class ClubsAsyncTask extends AsyncTask<Integer, String, League> {
         private int idLeague;
+        private boolean doInBackgroundComplete;
 
         @Override
         protected League doInBackground(Integer... params) {
-            idLeague = params[0];
             try {
-                DatabaseHelper databaseHelper = new DatabaseHelper(mListener.getApplicationContext(), RegionFragment.DB_NAME);
-                databaseHelper.openDataBase();
-                SQLiteDatabase db = databaseHelper.getReadableDatabase();
-                Cursor leagueCursor = db.rawQuery("SELECT url FROM leagues WHERE _id = " + idLeague, null);
-                String url = null;
-                if (leagueCursor.moveToNext())
-                    url = leagueCursor.getString(0);
-                leagueCursor.close();
-                db.close();
-                databaseHelper.close();
-                return League.getLeague(url);
+                this.doInBackgroundComplete = false;
+                idLeague = params[0];
+                openDb();
+                Log.i("LeagueFragment start", new SimpleDateFormat("mm:ss:SSS").format(new Date(System.currentTimeMillis())));
+                League l = League.getLeague(db, idLeague);
+                closeDb();
+                return l;
             } catch (Exception e) {
-                Log.w("ClubsAsyncTask", e.getMessage());
                 return null;
             }
         }
 
         @Override
-        protected void onPostExecute(League league) {
-            super.onPostExecute(league);
-            swipeRefreshLayout.setRefreshing(false);
-            if (league == null) {
-                Toast.makeText(mListener.getApplicationContext(), "Nelze navázat připojení k internetu", Toast.LENGTH_SHORT).show();
-                return;
+        protected void onPostExecute(final League league) {
+            try {
+                super.onPostExecute(league);
+                this.doInBackgroundComplete = true;
+                swipeRefreshLayout.setRefreshing(false);
+                if (league == null) {
+                    Toast.makeText(mListener.getApplicationContext(), "Nelze navázat připojení k internetu", Toast.LENGTH_SHORT).show();//TODO osetrit, na telefonu nefunguje
+                    return;
+                }
+                List<Result> results = league.getRoundResults(league.getLastRound());
+                Log.i("result.size()", String.valueOf(results.size()));
+                if (results.size() > 0) {
+                    round = league.getLastRound();
+                    lastRound = round;
+                    makeResultsTable(results);
+                }
+                makeNextMatchesTable(league.getNextMatches());
+                makeTable(league.getClubs());
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        insertedInDbLatch = new CountDownLatch(1);
+                        openDb();
+                        league.updateClubsAndResults(db, idLeague);
+                        closeDb();
+                        insertedInDbLatch.countDown();
+                    }
+                }).start();
+                isRefreshing = false;
+                swipeRefreshLayout.setRefreshing(false);
+            } catch (Exception e) {
+                Toast.makeText(mListener.getApplicationContext(), "Stala se chyba", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
             }
-            DatabaseHelper databaseHelper = new DatabaseHelper(mListener.getApplicationContext(), RegionFragment.DB_NAME);
-            databaseHelper.openDataBase();
-            SQLiteDatabase db = databaseHelper.getReadableDatabase();
-            league.updateClubsAndResults(db, idLeague);
-            loadLeague();
-            db.close();
-            databaseHelper.close();
+        }
+
+        public boolean isDoInBackgroundComplete() {
+            return doInBackgroundComplete;
         }
     }
 
+    private class ClubComparator implements Comparator<Club> {
+        @Override
+        public int compare(Club lhs, Club rhs) {
+            return lhs.compare(rhs);
+        }
+    }
+
+    private class NextMatchComparator implements Comparator<NextMatch> {
+
+        @Override
+        public int compare(NextMatch lhs, NextMatch rhs) {
+            return (lhs.getDatetime().getTime() < rhs.getDatetime().getTime()) ? -1 : ((lhs.getDatetime().getTime() == rhs.getDatetime().getTime()) ? 0 : 1);
+        }
+    }
 }

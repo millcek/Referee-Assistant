@@ -1,12 +1,13 @@
 package cz.vojacekmilan.refereeassistant.results;
 
-
 /**
  * Created by milan on 27.2.15.
  */
 public class Result {
-    private Club home;
-    private Club away;
+    private String home;
+    private String away;
+    private int idHome;
+    private int idAway;
     private int homeScore;
     private int awayScore;
     private int homeScoreHalf;
@@ -15,29 +16,74 @@ public class Result {
     private String note;
     private int round;
 
-
-    public Result(Club home, Club away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf) {
-        this.home = home;
-        this.away = away;
-        this.homeScore = homeScore;
-        this.awayScore = awayScore;
-        this.homeScoreHalf = homeScoreHalf;
-        this.awayScoreHalf = awayScoreHalf;
-    }
-
-    public Result(String home, String away, int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf) {
-        this.home = new Club();
-        this.home.setName(home);
-        this.away = new Club();
-        this.away.setName(away);
-        this.homeScore = homeScore;
-        this.awayScore = awayScore;
-        this.homeScoreHalf = homeScoreHalf;
-        this.awayScoreHalf = awayScoreHalf;
+    public Result(Object[] values) {
+        int i = 0;
+        for (Object object : values) {
+            String s = object.toString().replace("\n", "");
+            while (s.contains("  "))
+                s = s.replace("  ", " ");
+            s = s.trim();
+            try {
+                switch (i) {
+                    case 1:
+                        this.setHome(s);
+                        break;
+                    case 2:
+                        this.setAway(s);
+                        break;
+                    case 3:
+                        this.setScore(s);
+                        break;
+                    case 4:
+                        try {
+                            this.setViewers(Integer.valueOf(s));
+                        } catch (NumberFormatException e) {
+                            this.setViewers(-1);
+                        }
+                    case 5:
+                        this.setNote(s);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            i++;
+        }
     }
 
     public Result() {
 
+    }
+
+    public int getIdHome() {
+        return idHome;
+    }
+
+    public void setIdHome(int idHome) {
+        this.idHome = idHome;
+    }
+
+    public int getIdAway() {
+        return idAway;
+    }
+
+    public void setIdAway(int idAway) {
+        this.idAway = idAway;
+    }
+
+    public String getHome() {
+        return home;
+    }
+
+    public void setHome(String home) {
+        this.home = home;
+    }
+
+    public String getAway() {
+        return away;
+    }
+
+    public void setAway(String away) {
+        this.away = away;
     }
 
     public String getNote() {
@@ -62,26 +108,6 @@ public class Result {
 
     public void setViewers(int viewers) {
         this.viewers = viewers;
-    }
-
-    public Club getHome() {
-        return home;
-    }
-
-    public void setHome(Club home) {
-        this.home = home;
-    }
-
-    public Club getAway() {
-        return away;
-    }
-
-    public void setAway(Club away) {
-        this.away = away;
-    }
-
-    public void setAway(String away) {
-        this.away = new Club(away);
     }
 
     public void setScore(String score) {
@@ -170,7 +196,7 @@ public class Result {
     }
 
     public String getScore() {
-        if (homeScoreHalf == -1 || awayScoreHalf == -1)
+        if ((homeScore == 0 && awayScore == 0) || homeScoreHalf == -1 || awayScoreHalf == -1)
             return String.format("%d:%d", homeScore, awayScore);
         else
             return String.format("%d:%d (%d:%d)", homeScore, awayScore, homeScoreHalf, awayScoreHalf);

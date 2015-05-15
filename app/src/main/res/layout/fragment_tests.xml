@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -6,14 +6,14 @@
     tools:context="cz.vojacekmilan.refereeassistant.tests.TestsFragment">
 
     <Button
-        android:id="@+id/buttonTestsExam"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/title_activity_tests_exam" />
-
-    <Button
         android:id="@+id/buttonTestsBrowsing"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/title_activity_tests_browsing" />
-</LinearLayout>
+
+    <Button
+        android:id="@+id/buttonTestsExam"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/title_activity_tests_exam" />
+</GridLayout>

@@ -2,8 +2,9 @@ package cz.vojacekmilan.refereeassistant.results;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -19,6 +20,32 @@ public class NextMatch {
     private int idLeagues;
 
     public NextMatch() {
+    }
+
+    public NextMatch(Object[] values) {
+        int i = 0;
+        for (Object tdObject : values) {
+            String s = tdObject.toString().trim();
+            switch (i) {
+                case 1:
+                    this.setClubsHome(s);
+                    break;
+                case 2:
+                    this.setClubsAway(s);
+                    break;
+                case 3:
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
+                    try {
+                        this.setDatetime(dateFormat.parse(s));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 5:
+                    this.setField(s);
+            }
+            i++;
+        }
     }
 
     public String getClubsHome() {

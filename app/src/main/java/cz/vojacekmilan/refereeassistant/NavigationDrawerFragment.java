@@ -97,10 +97,15 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
-                getActionBar().getThemedContext(),
-                R.layout.fragment_navigation_drawer_list_item,//TODO udelat novy drawable v zelene barve
-                android.R.id.text1, getResources().getStringArray(R.array.nav_drawer_items)));
+
+        ObjectDrawerItem[] drawerItem = new ObjectDrawerItem[3];
+
+        drawerItem[0] = new ObjectDrawerItem(R.drawable.ic_home, "Home");
+        drawerItem[1] = new ObjectDrawerItem(R.drawable.ic_results, "Výsledky");
+        drawerItem[2] = new ObjectDrawerItem(R.drawable.ic_test, "Testy");
+        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(
+                getActivity(),
+                R.layout.fragment_navigation_drawer_list_item, drawerItem));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }

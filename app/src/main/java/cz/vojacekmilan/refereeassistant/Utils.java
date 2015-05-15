@@ -1,8 +1,13 @@
 package cz.vojacekmilan.refereeassistant;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.widget.Toast;
+import android.graphics.drawable.BitmapDrawable;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupWindow;
+import android.widget.TextView;
 
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -32,6 +37,25 @@ public class Utils {
         props.setTransResCharsToNCR(false);
         props.setOmitComments(true);
         props.setOmitXmlDeclaration(true);
+    }
+
+    public static void showPopup(Context context, View view, String text) {
+        if (text == null || text.replaceAll("//s+", "").length() == 0) return;
+        LayoutInflater inflater = (LayoutInflater)
+                context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View layout = inflater.inflate(R.layout.popup_text_view, null, false);
+        final PopupWindow pw = new PopupWindow(layout, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        pw.setBackgroundDrawable(new BitmapDrawable());
+        TextView textView = ((TextView) layout.findViewById(R.id.textView));
+        textView.setText(text.replace(": ", ":").replace(":", ": ").replaceAll("\n", "").replace(";", "\n"));
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pw.dismiss();
+            }
+        });
+        pw.showAtLocation(view, Gravity.CENTER, 0, 0);
+//        pw.showAsDropDown(view);
     }
 
     public static TagNode getCleanTagNodes(String str) {

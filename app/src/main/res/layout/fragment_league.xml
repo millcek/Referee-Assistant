@@ -29,13 +29,14 @@
                     android:background="@color/transparent"
                     android:contentDescription="@string/previous"
                     android:padding="@dimen/default_padding_min"
-                    android:src="@drawable/arrow_prev" />
+                    android:src="@drawable/arrow_prev_off" />
 
                 <TextView
                     android:id="@+id/roundTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:text="@string/results"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textColor="@color/primary_color" />
 
@@ -47,7 +48,7 @@
                     android:background="@color/transparent"
                     android:contentDescription="@string/next"
                     android:padding="@dimen/default_padding_min"
-                    android:src="@drawable/arrow_next" />
+                    android:src="@drawable/arrow_next_off" />
             </LinearLayout>
 
             <HorizontalScrollView

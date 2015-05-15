@@ -9,24 +9,23 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
+import android.widget.Toast;
 
 import java.util.Stack;
 
+import cz.vojacekmilan.refereeassistant.results.ClubFragment;
 import cz.vojacekmilan.refereeassistant.results.LeagueFragment;
 import cz.vojacekmilan.refereeassistant.results.Region;
+import cz.vojacekmilan.refereeassistant.results.RegionFragment;
+import cz.vojacekmilan.refereeassistant.results.ResultSearchFragment;
 import cz.vojacekmilan.refereeassistant.tests.TestsFragment;
 
 
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, RegionFragment.RegionFragmentInteractionListener, LeagueFragment.LeagueFragmentInteractionListener, ClubFragment.ClubFragmentInteractionListener {
 
-    /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
     private NavigationDrawerFragment mNavigationDrawerFragment;
-
     private CharSequence mTitle;
-
     private Stack<String> titlesStack;
 
     @Override
@@ -64,18 +63,19 @@ public class MainActivity extends ActionBarActivity
             titlesStack.clear();
         switch (position) {
             case 0:
-                loadRegion(0);
+                fragmentTransaction.replace(R.id.container, ResultSearchFragment.newInstance());
+                setTitle(null);
                 break;
             case 1:
                 loadRegion(0);
                 break;
             case 2:
                 fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
-                setTitle(R.string.title_activity_tests_exam);
+                setTitle(null);
                 break;
         }
         fragmentTransaction.commit();
-        if (mTitle.length() == 0)
+        if (mTitle == null || mTitle.length() == 0)
             setTitle(null);
     }
 
@@ -143,6 +143,22 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void loadClub(int id) {
+        if (id < 1)
+            return;
+        DatabaseHelper databaseHelper = new DatabaseHelper(this, RegionFragment.DB_NAME);
+        databaseHelper.openDataBase();
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery(String.format("SELECT _id FROM results WHERE id_clubs_home = %d OR id_clubs_away = %d", id, id), null);
+        int count = cursor.getCount();
+        cursor.close();
+        db.close();
+        databaseHelper.close();
+
+        if (count < 1) {
+            Toast.makeText(getApplicationContext(), "Pro vybraný tým nejsou k dispozici žádné výsledky", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.container, ClubFragment.newInstance(id));
         fragmentTransaction.addToBackStack(null);

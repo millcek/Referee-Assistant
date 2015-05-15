@@ -1,7 +1,5 @@
 package cz.vojacekmilan.refereeassistant.results;
 
-import android.util.Log;
-
 /**
  * Created by milan on 27.2.15.
  */
@@ -116,6 +114,10 @@ public class Club {
         return winnings * 3 + draws;
     }
 
+    public int getScoreDifference() {
+        return scoredGoals - receivedGoals;
+    }
+
     public String getScore() {
         return scoredGoals + ":" + receivedGoals;
     }
@@ -127,6 +129,24 @@ public class Club {
     public String getSqlInsert(int idLeagues) {
         return String.format("INSERT INTO clubs (name, winnings, draws, losses, scored_goals, received_goals, points_truth, id_leagues) VALUES ('%s', %d, %d, %d, %d, %d, %d, %d);",
                 name, winnings, draws, losses, scoredGoals, receivedGoals, pointsTruth, idLeagues);
+    }
+
+    public String getSqlUpdate(int idLeagues) {
+        return String.format("UPDATE clubs SET winnings = %d, draws = %d, losses = %d, scored_goals = %d, received_goals = %d, points_truth = %d WHERE id_leagues = %d AND name = '%s';",
+                winnings, draws, losses, scoredGoals, receivedGoals, pointsTruth, idLeagues, name);
+    }
+
+    private int comparator(int first, int second) {
+        return first > second ? -1 : first == second ? 0 : 1;
+    }
+
+    public int compare(Club club) {
+        if (this.getPoints() == club.getPoints())
+            if (this.getScoreDifference() == club.getScoreDifference())
+                return comparator(this.getScoredGoals(), club.getScoredGoals());
+            else
+                return comparator(this.getScoreDifference(), club.getScoreDifference());
+        return comparator(this.getPoints(), club.getPoints());
     }
 
     @Override

@@ -9,11 +9,11 @@ import org.htmlcleaner.XPatherException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import cz.vojacekmilan.refereeassistant.Utils;
 
@@ -24,7 +24,6 @@ import static cz.vojacekmilan.refereeassistant.Utils.getSerializedHtml;
  * Created by milan on 27.2.15.
  */
 public class League {
-    private static final String DEFAULT_FORMAT = "%empty %name %empty %wins %draws %losses %score %empty %empty %pointstruth";
 
     private int id;
     private String name;
@@ -59,6 +58,22 @@ public class League {
 
     public League() {
 
+    }
+
+    public List<Result> getRoundResults(int round) {
+        List<Result> out = new LinkedList<>();
+        for (Result result : results)
+            if (result.getRound() == round)
+                out.add(result);
+        return out;
+    }
+
+    public int getLastRound() {
+        int max = 0;
+        for (Result result : results)
+            if (result.getRound() > max)
+                max = result.getRound();
+        return max;
     }
 
     public List<NextMatch> getNextMatches() {
@@ -120,169 +135,146 @@ public class League {
                 "\n}";
     }
 
-    public void pairClubs() {
-        for (Result result : results) {
-            boolean homeSet = false;
-            boolean awaySet = false;
-            for (Club club : clubs) {
-                try {
-                    if (result.getHome().getName().equals(club.getName())) {
-                        result.setHome(club);
-                        homeSet = true;
-                    }
-                    if (result.getAway().getName().equals(club.getName())) {
-                        result.setAway(club);
-                        awaySet = true;
-                    }
-                    if (homeSet && awaySet) break;
-                } catch (Exception e) {
-                    Log.i("League", e.getMessage());
-                }
-            }
+    public static League getLeague(SQLiteDatabase db, int id) {
+        Cursor leagueCursor = db.rawQuery("SELECT url FROM leagues WHERE _id = " + id, null);
+        String url = null;
+        if (leagueCursor.moveToNext())
+            url = leagueCursor.getString(0);
+        leagueCursor.close();
+        try {
+            return getLeague(url, getLastCompleteRound(db, id));
+        } catch (MalformedURLException | XPatherException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
-    public static League getLeague(String url) throws MalformedURLException, XPatherException {
-        return getLeague(new League(url));
+    public static League getLeague(String url, int lastCompleteRound) throws MalformedURLException, XPatherException {
+        return getLeague(new League(url), lastCompleteRound);
     }
 
-    public static League getLeague(League league) throws MalformedURLException, XPatherException {
+    public static League getLeague(final League league, final int lastCompleteRound) throws MalformedURLException, XPatherException {
         String clubsUrl = league.getUrlString();
-        String resultsUrl = league.getUrlString();
-        if (clubsUrl.contains("&"))
-            clubsUrl = clubsUrl.substring(0, clubsUrl.indexOf("&")) + "&show=Aktual";
-        else
-            clubsUrl += "&show=Aktual";
-        if (resultsUrl.contains("&"))
-            resultsUrl = resultsUrl.substring(0, resultsUrl.indexOf("&")) + "&show=Vysledky";
-        else
-            resultsUrl += "&show=Vysledky";
-        TagNode rootClubs = getCleanTagNodes(new URL(clubsUrl), Results.CHARSET);
-        TagNode rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
-        List<Club> clubs = getClubs(rootClubs);
-        List<NextMatch> nextMatches = getNextMatches(rootClubs);
-        List<Result> results = getResults(rootResults);
-        league.setClubs(clubs);
-        league.setResults(results);
-        league.setNextMatches(nextMatches);
-        league.pairClubs();
-        return league;
+        clubsUrl = (clubsUrl.contains("&") ? clubsUrl.substring(0, clubsUrl.indexOf("&")) : clubsUrl) + "&show=Aktual";
+        final TagNode rootClubs = getCleanTagNodes(new URL(clubsUrl), Results.CHARSET);
+        final CountDownLatch latch = new CountDownLatch(3);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    league.setClubs(getClubs(rootClubs));
+                    latch.countDown();
+                } catch (MalformedURLException | XPatherException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                league.setNextMatches(getNextMatches(rootClubs));
+                latch.countDown();
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String resultsUrl = league.getUrlString();
+                resultsUrl = (resultsUrl.contains("&") ? resultsUrl.substring(0, resultsUrl.indexOf("&")) : resultsUrl) + "&show=Vysledky";
+                TagNode rootResults = null;
+                try {
+                    rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                league.setResults(getResults(rootResults, lastCompleteRound));
+                latch.countDown();
+            }
+        }).start();
+        try {
+            latch.await();
+            return league;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private static List<NextMatch> getNextMatches(TagNode root) {
         List<NextMatch> nextMatches = new ArrayList<>();
         root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[3]"));
         try {
-            for (Object o : root.evaluateXPath("//tr[@bgcolor='bbbbbb']"))
-                root.removeChild(o);
-            for (Object o : root.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
-                root.removeChild(o);
-            for (Object o : root.evaluateXPath("//tr")) {
-                TagNode trTagNode = (TagNode) o;
-                int i = 0;
-                for (Object ignored : trTagNode.evaluateXPath("//td"))
-                    i++;
-                if (i == 6) {
-                    i = 0;
-                    NextMatch nextMatch = new NextMatch();
-                    try {
-                        for (Object tdObject : trTagNode.evaluateXPath("//td/text()")) {
-                            String s = tdObject.toString().trim();
-                            switch (i) {
-                                case 1:
-                                    nextMatch.setClubsHome(s);
-                                    break;
-                                case 2:
-                                    nextMatch.setClubsAway(s);
-                                    break;
-                                case 3:
-                                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM. HH:mm");
-                                    nextMatch.setDatetime(dateFormat.parse(s));
-                                    break;
-                                case 5:
-                                    nextMatch.setField(s);
-                            }
-                            i++;
-                        }
-                        nextMatches.add(nextMatch);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            for (Object o : root.evaluateXPath("//tr[@bgcolor='#f8f8f8']"))
+                nextMatches.add(new NextMatch(((TagNode) o).evaluateXPath("//td/text()")));
+            for (Object o : root.evaluateXPath("//tr[@bgcolor='#ffffff']"))
+                nextMatches.add(new NextMatch(((TagNode) o).evaluateXPath("//td/text()")));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return nextMatches;
     }
 
-    private static List<Result> getResults(TagNode root) {
-        List<Result> results = new ArrayList<>();
+    private static List<Result> getResults(TagNode root, int lastCompleteRound) {
+        final List<Result> results = new ArrayList<>();
         root = getCleanTagNodes(
                 getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));
+        List<Thread> threads = new LinkedList<>();
         try {
             int round = 1;
-            Result result = new Result();
-            for (Object tableObject : root.evaluateXPath("//table")) {
-                TagNode tableTagNode = (TagNode) tableObject;
-                for (Object o : tableTagNode.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
-                    tableTagNode.removeChild(o);
-                for (Object rowObject : tableTagNode.evaluateXPath("//tr")) {
-                    TagNode rowTagNode = (TagNode) rowObject;
-                    int i = 0;
-                    for (Object ignored : rowTagNode.evaluateXPath("//td"))
-                        i++;
-                    if (i == 6 && !rowTagNode.hasAttribute("bgcolor")) {
-                        i = 0;
-                        if (result.getHome() != null) {
-                            results.add(result);
-                            result = new Result();
+            Log.i("getResults", "lastCompleteRound = " + lastCompleteRound);
+            for (final Object tableObject : root.evaluateXPath("//table")) {
+                if (round > lastCompleteRound) {
+                    final int finalRound = round;
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            results.addAll(getResultsFromTable((TagNode) tableObject, finalRound));
                         }
-                        result.setRound(round);
-                        for (Object object : rowTagNode.evaluateXPath("//td/text()")) {
-                            String s = object.toString().replace("\n", "");
-                            while (s.contains("  "))
-                                s = s.replace("  ", " ");
-                            s = s.trim();
-                            try {
-                                switch (i) {
-                                    case 1:
-                                        result.setHome(new Club(s));
-                                        break;
-                                    case 2:
-                                        result.setAway(new Club(s));
-                                        break;
-                                    case 3:
-                                        result.setScore(s);
-                                        break;
-                                    case 4:
-                                        try {
-                                            result.setViewers(Integer.valueOf(s));
-                                        } catch (NumberFormatException e) {
-                                            result.setViewers(-1);
-                                        }
-                                    case 5:
-                                        result.setNote(s);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            i++;
-                        }
-                    } else if (rowTagNode.getChildTags().length > 0 && rowTagNode.getChildTags()[0].hasAttribute("bgcolor")) {
-                        if (result.getNote() == null || result.getNote().trim().equals(""))
-                            result.setNote(Utils.getStringXpath(rowTagNode, "text()"));
-                        else
-                            result.setNote(result.getNote() + ", " + Utils.getStringXpath(rowTagNode, "text()"));
-                        results.add(result);
-                        result = new Result();
-                    }
+                    });
+                    threads.add(thread);
+                    thread.start();
                 }
                 round++;
             }
+
+        } catch (XPatherException e) {
+            e.printStackTrace();
+        }
+        for (Thread thread : threads)
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return null;
+            }
+        return results;
+    }
+
+    private static List<Result> getResultsFromTable(TagNode tableTagNode, int round) {
+        List<Result> results = new LinkedList<>();
+        Result result = new Result();
+        try {
+            for (Object o : tableTagNode.evaluateXPath("//tr[@bgcolor='#aaaaaa']"))
+                tableTagNode.removeChild(o);
+            for (Object rowObject : tableTagNode.evaluateXPath("//tr")) {
+                TagNode rowTagNode = (TagNode) rowObject;
+                int i = 0;
+                for (Object ignored : rowTagNode.evaluateXPath("//td"))
+                    i++;
+                if (i == 6 && !rowTagNode.hasAttribute("bgcolor")) {
+                    if (result.getHome() != null)
+                        results.add(result);
+                    result = new Result(rowTagNode.evaluateXPath("//td/text()"));
+                    result.setRound(round);
+                } else if (rowTagNode.getChildTags().length > 0 && rowTagNode.getChildTags()[0].hasAttribute("bgcolor"))
+                    result.setNote((result.getNote() == null || result.getNote().trim().equals("")) ?
+                            Utils.getStringXpath(rowTagNode, "text()") :
+                            result.getNote() + ", " + Utils.getStringXpath(rowTagNode, "text()"));
+            }
             if (!results.contains(result) && result.getHome() != null)
                 results.add(result);
-
         } catch (XPatherException e) {
             e.printStackTrace();
         }
@@ -290,65 +282,90 @@ public class League {
     }
 
     private static List<Club> getClubs(TagNode root) throws MalformedURLException, XPatherException {
-        List<Club> clubs = new LinkedList<>();
+        final List<Club> clubs = new LinkedList<>();
         root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[2]", "utf-8"));
-        String htmlTable = getSerializedHtml(root, "//tr[@bgcolor='#f8f8f8']") + "\n" + getSerializedHtml(root, "//tr[@bgcolor='#ffffff']");
-        String format = DEFAULT_FORMAT;
-        while (htmlTable.length() > 0) {
-            if (!htmlTable.contains("</tr>"))
-                break;
-            String row = htmlTable.substring(0, htmlTable.indexOf("</tr>"));
-            htmlTable = htmlTable.substring(htmlTable.indexOf("</tr>") + 5);
-            String rowFormat = format;
-            Club newClub = new Club();
-            while (rowFormat.contains("%") && row.contains("</td>")) {
-                rowFormat = rowFormat.substring(rowFormat.indexOf("%") + 1);
-                String actual;
-                String node = row.substring(0, row.indexOf("</td>"));
-                node = node.replaceAll("<.*?>", "").replaceAll("\n", " ").trim();
-                row = row.substring(row.indexOf("</td>") + 5);
-                if (rowFormat.contains("%"))
-                    actual = rowFormat.substring(0, rowFormat.indexOf("%")).trim().toLowerCase();
-                else
-                    actual = rowFormat.trim().toLowerCase();
-                switch (actual) {
-                    case "name":
+        String htmlTable = "<html><head></head><body><table><tbody>" + getSerializedHtml(root, "//tr[@bgcolor='#f8f8f8']") + getSerializedHtml(root, "//tr[@bgcolor='#ffffff']") + "</tbody></table></body></html>";
+        TagNode htmlTableTagNode = getCleanTagNodes(htmlTable);
+        List<Thread> threads = new ArrayList<>();
+        for (Object o : htmlTableTagNode.evaluateXPath("//tr")) {
+            final TagNode tn = (TagNode) o;
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    clubs.add(getClubFromRow(tn));
+                }
+            });
+            thread.start();
+            threads.add(thread);
+        }
+        for (Thread thread : threads)
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return null;
+            }
+        return clubs;
+    }
+
+    private static Club getClubFromRow(TagNode rowTagNode) {
+        Club newClub = new Club();
+        int i = 0;
+        try {
+            for (Object o : rowTagNode.evaluateXPath("//td/text()")) {
+                String node = o.toString();
+                switch (i) {
+                    case 1:
                         newClub.setName(node);
                         break;
-                    case "wins":
+                    case 3:
                         newClub.setWinnings(Integer.valueOf(node));
                         break;
-                    case "draws":
+                    case 4:
                         newClub.setDraws(Integer.valueOf(node));
                         break;
-                    case "losses":
+                    case 5:
                         newClub.setLosses(Integer.valueOf(node));
                         break;
-                    case "score":
+                    case 6:
                         if (node.contains(":")) {
                             newClub.setScoredGoals(Integer.valueOf(node.substring(0, node.indexOf(":")).trim()));
                             newClub.setReceivedGoals(Integer.valueOf(node.substring(1 + node.indexOf(":")).trim()));
                         }
                         break;
-                    case "pointstruth":
+                    case 9:
                         newClub.setPointsTruth(Integer.valueOf(node.replace("(", "").replace(")", "").trim()));
                         break;
                 }
+                i++;
             }
-            clubs.add(newClub);
+        } catch (XPatherException e) {
+            e.printStackTrace();
         }
-        return clubs;
+        return newClub;
     }
 
-    public static void removeClubsAndResultsFromDB(SQLiteDatabase db, int id) {
-        db.execSQL("DELETE FROM clubs WHERE id_leagues = " + id);
-        db.execSQL("DELETE FROM results WHERE id_leagues = " + id);//TODO udelat update - u vseho, i u tymu a u dalsich 3,14covin
-        db.execSQL("DELETE FROM next_matches WHERE id_leagues = " + id);//TODO udelat update - u vseho, i u tymu a u dalsich 3,14covin
+    private static int getLastCompleteRound(SQLiteDatabase db, int idLeague) {
+        Cursor cursor = db.rawQuery("SELECT _id FROM clubs WHERE id_leagues = " + idLeague, null);
+        int matchesCount = cursor.getCount() / 2;
+        cursor = db.rawQuery("SELECT MAX(round) FROM results WHERE id_leagues = " + idLeague, null);
+        int lastRound = 0;
+        if (cursor != null && cursor.moveToNext())
+            lastRound = cursor.getInt(0);
+        if (matchesCount == 0 || lastRound == 0) return 0;
+        for (int i = 1; true; i++) {
+            cursor = db.rawQuery("SELECT round FROM results WHERE round = " + i + " AND id_leagues = " + idLeague, null);
+            if (cursor.getCount() < matchesCount || i == lastRound) {
+                cursor.close();
+                db.execSQL("DELETE FROM results WHERE round > " + i + " AND id_leagues = " + idLeague);
+                return i;
+            }
+        }
     }
 
     public void updateClubsAndResults(SQLiteDatabase db, int id) {
         db.execSQL("UPDATE leagues SET updated = datetime('now') WHERE _id = " + id);
-        removeClubsAndResultsFromDB(db, id);
+        db.execSQL("DELETE FROM next_matches WHERE id_leagues = " + id);
         insertIntoDB(db, id);
     }
 
@@ -361,9 +378,9 @@ public class League {
         cursor.close();
         for (Result result : results)
             try {
-                db.execSQL(result.getSqlInsert(id, clubsHashMap.get(result.getHome().getName()), clubsHashMap.get(result.getAway().getName())));
+                db.execSQL(result.getSqlInsert(id, clubsHashMap.get(result.getHome()), clubsHashMap.get(result.getAway())));
             } catch (Exception e) {
-                Log.w("League error", e.getMessage());
+                Log.w("League error 1", e.getMessage());
             }
         for (NextMatch nextMatch : nextMatches)
             try {
@@ -372,12 +389,18 @@ public class League {
                 nextMatch.setIdLeagues(id);
                 db.execSQL(nextMatch.getSqlInsert());
             } catch (Exception e) {
-                Log.w("League error", e.getMessage());
+                Log.w("League error 2", e.getMessage());
             }
     }
 
     private void insertClubs(SQLiteDatabase db, int id) {
-        for (Club club : clubs)
-            db.execSQL(club.getSqlInsert(id));
+        Cursor cursor = db.rawQuery("SELECT _id FROM clubs WHERE id_leagues = " + id, null);
+        if (cursor.getCount() == 0)
+            for (Club club : clubs)
+                db.execSQL(club.getSqlInsert(id));
+        else
+            for (Club club : clubs)
+                db.execSQL(club.getSqlUpdate(id));
+        cursor.close();
     }
 }

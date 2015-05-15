@@ -1,4 +1,4 @@
-package cz.vojacekmilan.refereeassistant;
+package cz.vojacekmilan.refereeassistant.results;
 
 
 import android.app.Activity;
@@ -9,9 +9,11 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -19,8 +21,9 @@ import android.widget.TextView;
 import java.util.LinkedList;
 import java.util.List;
 
-import cz.vojacekmilan.refereeassistant.results.Club;
-import cz.vojacekmilan.refereeassistant.results.Result;
+import cz.vojacekmilan.refereeassistant.DatabaseHelper;
+import cz.vojacekmilan.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.Utils;
 
 
 public class ClubFragment extends Fragment {
@@ -64,7 +67,7 @@ public class ClubFragment extends Fragment {
             mListener = (ClubFragmentInteractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");//TODO obarvit radky tabulky podle toho kdo vyhral
+                    + " must implement OnFragmentInteractionListener");
         }
     }
 
@@ -83,21 +86,26 @@ public class ClubFragment extends Fragment {
         DatabaseHelper databaseHelper = new DatabaseHelper(mListener.getApplicationContext(), RegionFragment.DB_NAME);
         databaseHelper.openDataBase();
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT round, id_clubs_home, id_clubs_away, home_score, away_score, home_score_half, away_score_half FROM results WHERE id_clubs_home = " + idClub + " OR id_clubs_away = " + idClub, null);
+        Cursor cursor = db.rawQuery("SELECT round, id_clubs_home, id_clubs_away, home_score, away_score, home_score_half, away_score_half, note FROM results WHERE id_clubs_home = " + idClub + " OR id_clubs_away = " + idClub, null);
         List<Result> results = new LinkedList<>();
 
         while (cursor.moveToNext()) {
             Result result = new Result();
             result.setRound(cursor.getInt(0));
             Cursor homeCursor = db.rawQuery("SELECT name FROM clubs WHERE _id = " + cursor.getInt(1), null);
-            if (homeCursor.moveToNext())
-                result.setHome(new Club(cursor.getInt(1), homeCursor.getString(0)));
+            if (homeCursor.moveToNext()) {
+                result.setHome(homeCursor.getString(0));
+                result.setIdHome(cursor.getInt(1));
+            }
             homeCursor.close();
             Cursor awayCursor = db.rawQuery("SELECT name FROM clubs WHERE _id = " + cursor.getInt(2), null);
-            if (awayCursor.moveToNext())
-                result.setAway(new Club(cursor.getInt(2), awayCursor.getString(0)));
+            if (awayCursor.moveToNext()) {
+                result.setAway(awayCursor.getString(0));
+                result.setIdAway(cursor.getInt(2));
+            }
             awayCursor.close();
             result.setScore(cursor.getInt(3), cursor.getInt(4), cursor.getInt(5), cursor.getInt(6));
+            result.setNote(cursor.getString(7));
             results.add(result);
         }
         makeResultsTable(results);
@@ -122,7 +130,7 @@ public class ClubFragment extends Fragment {
         TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
                 TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
         TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"Kolo", "Domácí", "Hosté", "Skóre"};
+        String[] columnNames = new String[]{"", "Domácí", "Hosté", "Výsledek"};
         for (String s : columnNames) {
             TextView textView = newTableTextView(s);
             textView.setTypeface(null, Typeface.ITALIC);
@@ -132,29 +140,38 @@ public class ClubFragment extends Fragment {
         resultsTableLayout.addView(headTableRow);
         int i = 0;
         for (final Result result : results) {
-            TableRow tableRow = new TableRow(mListener.getApplicationContext());
-            tableRow.addView(newTableTextView(String.valueOf(result.getRound())));
-            tableRow.addView(newTableTextView(result.getHome().getName().replace("&quot;", "\"")));
-            tableRow.addView(newTableTextView(result.getAway().getName().replace("&quot;", "\"")));
+            final TableRow tableRow = new TableRow(mListener.getApplicationContext());
+            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
             int homeScore, awayScore;
-            if (result.getHome().getId() == idClub) {
+            if (result.getIdHome() == idClub) {
                 homeScore = result.getHomeScore();
                 awayScore = result.getAwayScore();
             } else {
                 awayScore = result.getHomeScore();
                 homeScore = result.getAwayScore();
             }
+            ImageView imageView = new ImageView(mListener.getApplicationContext());
             if (homeScore > awayScore)
-                tableRow.setBackgroundColor(getResources().getColor(R.color.green));
+                imageView.setImageResource(R.drawable.icon_win);
             else if (homeScore < awayScore)
-                tableRow.setBackgroundColor(getResources().getColor(R.color.red));
+                imageView.setImageResource(R.drawable.icon_lose);
             else
-                tableRow.setBackgroundColor(getResources().getColor(R.color.yellow));
+                imageView.setImageResource(R.drawable.icon_draw);
+            tableRow.setGravity(Gravity.CENTER);
+            tableRow.addView(imageView);
+            tableRow.addView(newTableTextView(result.getHome().replace("&quot;", "\"")));
+            tableRow.addView(newTableTextView(result.getAway().replace("&quot;", "\"")));
 
             TextView resultTextView = newTableTextView(result.getScore());
             resultTextView.setTypeface(null, Typeface.BOLD);
             tableRow.addView(resultTextView);
             tableRow.setLayoutParams(tableLayoutParams);
+            tableRow.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Utils.showPopup(getActivity(), tableRow, result.getNote());
+                }
+            });
             resultsTableLayout.addView(tableRow);
             i++;
         }
