@@ -517,8 +517,8 @@ public class LeagueFragment extends Fragment {
                 super.onPostExecute(league);
                 this.doInBackgroundComplete = true;
                 swipeRefreshLayout.setRefreshing(false);
-                if (league == null) {
-                    Toast.makeText(mListener.getApplicationContext(), "Nelze navázat připojení k internetu", Toast.LENGTH_SHORT).show();//TODO osetrit, na telefonu nefunguje
+                if (league == null) {//TODO upravit tak, aby do DB ukladal postupne - nevracel celou strukturu - nebude zrat tolik pameti
+                    Toast.makeText(mListener.getApplicationContext(), "Nelze navázat připojení k internetu", Toast.LENGTH_SHORT).show();//TODO NAPICU osetrit, na telefonu nefunguje
                     return;
                 }
                 List<Result> results = league.getRoundResults(league.getLastRound());
@@ -562,7 +562,6 @@ public class LeagueFragment extends Fragment {
     }
 
     private class NextMatchComparator implements Comparator<NextMatch> {
-
         @Override
         public int compare(NextMatch lhs, NextMatch rhs) {
             return (lhs.getDatetime().getTime() < rhs.getDatetime().getTime()) ? -1 : ((lhs.getDatetime().getTime() == rhs.getDatetime().getTime()) ? 0 : 1);
