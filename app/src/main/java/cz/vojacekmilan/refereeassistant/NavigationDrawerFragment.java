@@ -1,6 +1,7 @@
 package cz.vojacekmilan.refereeassistant;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -11,14 +12,21 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.widget.ExpandableListView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import cz.vojacekmilan.refereeassistant.tests.TestsExamLauncherActivity;
+import cz.vojacekmilan.refereeassistant.tests.TestsPracticeActivity;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -49,7 +57,7 @@ public class NavigationDrawerFragment extends Fragment {
     private ActionBarDrawerToggle mDrawerToggle;
 
     private DrawerLayout mDrawerLayout;
-    private ListView mDrawerListView;
+    private ExpandableListView mDrawerListView;
     private View mFragmentContainerView;
 
     private int mCurrentSelectedPosition = 0;
@@ -74,11 +82,11 @@ public class NavigationDrawerFragment extends Fragment {
             mFromSavedInstanceState = true;
         }
 
-        CharSequence[] menuArray = getResources().getTextArray(R.array.menu);
-        int[] iconArray = new int[]{R.drawable.ic_home, R.drawable.ic_results, R.drawable.ic_test};
-        drawerItems = new ObjectDrawerItem[menuArray.length];
-        for (int i = 0; i < drawerItems.length; i++)
-            drawerItems[i] = new ObjectDrawerItem(getResources().getDrawable(iconArray[i]), String.valueOf(menuArray[i]));
+//        CharSequence[] menuArray = getResources().getTextArray(R.array.menu);
+//        int[] iconArray = new int[]{R.drawable.ic_home, R.drawable.ic_results, R.drawable.ic_test};
+//        drawerItems = new ObjectDrawerItem[menuArray.length];
+//        for (int i = 0; i < drawerItems.length; i++)
+//            drawerItems[i] = new ObjectDrawerItem(getResources().getDrawable(iconArray[i]), String.valueOf(menuArray[i]));
 
         selectItem(mCurrentSelectedPosition);
     }
@@ -93,16 +101,73 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mDrawerListView = (ListView) inflater.inflate(
+        mDrawerListView = (ExpandableListView) inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
-        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(
-                getActivity(),
-                R.layout.fragment_navigation_drawer_list_item, drawerItems));
+
+        CharSequence[] menuArray = getResources().getTextArray(R.array.menu);
+        int[] iconArray = new int[]{R.drawable.ic_home, R.drawable.ic_results, R.drawable.ic_test};
+        drawerItems = new ObjectDrawerItem[menuArray.length];
+        for (int i = 0; i < drawerItems.length; i++)
+            drawerItems[i] = new ObjectDrawerItem(getResources().getDrawable(iconArray[i]), String.valueOf(menuArray[i]));
+
+        HashMap<ObjectDrawerItem, List<String>> listDataChild = new HashMap<>();
+
+        // Adding child data
+        List<String> home = new ArrayList<>();
+
+        List<String> results = new ArrayList<>();
+        results.add("The Conjuring");
+        results.add("Despicable Me 2");
+        results.add("Turbo");
+        results.add("Grown Ups 2");
+        results.add("Red 2");
+        results.add("The Wolverine");
+
+        List<String> tests = new ArrayList<>();
+        tests.add("Prohlížení otázek");
+        tests.add("Test");
+
+        listDataChild.put(drawerItems[0], home);
+        listDataChild.put(drawerItems[1], results);
+        listDataChild.put(drawerItems[2], tests);
+
+        mDrawerListView.setAdapter(new MyExpandableListAdapter(getActivity(), drawerItems, listDataChild));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
-        mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mDrawerListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                selectItem(position);
+            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+                Log.i("Clicked on group", String.format("group %d", groupPosition));
+                if (groupPosition != 2) {
+                    selectItem(groupPosition);
+                    return true;
+                }
+                return false;
+            }
+        });
+        mDrawerListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                Log.i("Clicked on child", String.format("group %d, child %d", groupPosition, childPosition));
+                switch (groupPosition) {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        Intent intent = new Intent(getActivity(), TestsPracticeActivity.class);
+                        ;
+                        switch (childPosition) {
+                            case 0:
+                                break;
+                            case 1:
+                                intent = new Intent(getActivity(), TestsExamLauncherActivity.class);
+                                break;
+                            default:
+                                startActivity(intent);
+                        }
+
+                }
+                return false;
             }
         });
 

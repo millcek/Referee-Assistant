@@ -40,4 +40,10 @@ public class ObjectDrawerItem {
     public void deactivate() {
         icon.clearColorFilter();
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
 }
