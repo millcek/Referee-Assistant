@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!--<color name="primary_color">#FF3BC100</color>-->
-    <color name="primary_color">#FF237400</color>
+    <color name="primary_color">#FF3BC100</color>
+    <!--<color name="primary_color">#FF237400</color>-->
     <color name="secondary_color">#FF237400</color>
     <color name="divider_color">#FF3BC100</color>
     <color name="activated_background_color">#FFE8E8E8</color>
@@ -22,7 +22,4 @@
     <color name="white">#FFFFFFFF</color>
     <color name="popup">#FF5D5D5D</color>
     <color name="myDrawerBackground">#ffffffff</color>
-
-    <color name="active">#ffadadad</color>
-    <color name="inactive">#ff4d4d4d</color>
 </resources>

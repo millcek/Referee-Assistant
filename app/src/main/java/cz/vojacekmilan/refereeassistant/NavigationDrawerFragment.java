@@ -18,7 +18,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -55,7 +57,6 @@ public class NavigationDrawerFragment extends Fragment {
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
-    private ObjectDrawerItem[] drawerItems;
 
     public NavigationDrawerFragment() {
     }
@@ -74,12 +75,7 @@ public class NavigationDrawerFragment extends Fragment {
             mFromSavedInstanceState = true;
         }
 
-        CharSequence[] menuArray = getResources().getTextArray(R.array.menu);
-        int[] iconArray = new int[]{R.drawable.ic_home, R.drawable.ic_results, R.drawable.ic_test};
-        drawerItems = new ObjectDrawerItem[menuArray.length];
-        for (int i = 0; i < drawerItems.length; i++)
-            drawerItems[i] = new ObjectDrawerItem(getResources().getDrawable(iconArray[i]), String.valueOf(menuArray[i]));
-
+        // Select either the default item (0) or the last selected item.
         selectItem(mCurrentSelectedPosition);
     }
 
@@ -95,10 +91,6 @@ public class NavigationDrawerFragment extends Fragment {
                              Bundle savedInstanceState) {
         mDrawerListView = (ListView) inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
-        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(
-                getActivity(),
-                R.layout.fragment_navigation_drawer_list_item, drawerItems));
-        mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -106,6 +98,15 @@ public class NavigationDrawerFragment extends Fragment {
             }
         });
 
+        ObjectDrawerItem[] drawerItem = new ObjectDrawerItem[3];
+
+        drawerItem[0] = new ObjectDrawerItem(R.drawable.ic_home, "Home");
+        drawerItem[1] = new ObjectDrawerItem(R.drawable.ic_results, "Výsledky");
+        drawerItem[2] = new ObjectDrawerItem(R.drawable.ic_test, "Testy");
+        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(
+                getActivity(),
+                R.layout.fragment_navigation_drawer_list_item, drawerItem));
+        mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
 
@@ -188,10 +189,6 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     private void selectItem(int position) {
-        if (drawerItems != null) {
-            drawerItems[mCurrentSelectedPosition].deactivate();
-            drawerItems[position].activate();
-        }
         mCurrentSelectedPosition = position;
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, true);

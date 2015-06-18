@@ -109,35 +109,39 @@ public class TestsExamActivity extends ActionBarActivity {
 
         String query = queryStringBuilder.toString();
 
-        Cursor questionsCursor = db.rawQuery("SELECT text FROM questions WHERE" + query, null);
-        int i = 0;
-        while (questionsCursor.moveToNext()) {
-            questions[i].setText(questionsCursor.getString(0));
-            i++;
-        }
-        questionsCursor.close();
-
-        Cursor answersCursor = db.rawQuery(String.format("SELECT id_questions, text, correct FROM answers WHERE%s", query.replace("_id", "id_questions")), null);
-        i = 0;
-        int correct = 0;
-        int last = -1;
-        List<String> listAnswers = new LinkedList<>();
-        while (answersCursor.moveToNext()) {
-            n = answersCursor.getInt(0);
-            if (n != last) {
-                if (last != -1) {
-                    fillAnswers(i, listAnswers, correct);
-                    listAnswers = new LinkedList<>();
-                    i++;
-                }
-                last = n;
+        synchronized (this) {
+            Cursor questionsCursor = db.rawQuery("SELECT text FROM questions WHERE" + query, null);
+            int i = 0;
+            while (questionsCursor.moveToNext()) {
+                questions[i].setText(questionsCursor.getString(0));
+                i++;
             }
-            if (answersCursor.getInt(2) == 1)
-                correct = listAnswers.size();
-            listAnswers.add(answersCursor.getString(1));
+            questionsCursor.close();
         }
-        fillAnswers(i, listAnswers, correct);
-        answersCursor.close();
+
+        synchronized (this) {
+            Cursor answersCursor = db.rawQuery(String.format("SELECT id_questions, text, correct FROM answers WHERE%s", query.replace("_id", "id_questions")), null);
+            int i = 0;
+            int correct = 0;
+            int last = -1;
+            List<String> listAnswers = new LinkedList<>();
+            while (answersCursor.moveToNext()) {
+                n = answersCursor.getInt(0);
+                if (n != last) {
+                    if (last != -1) {
+                        fillAnswers(i, listAnswers, correct);
+                        listAnswers = new LinkedList<>();
+                        i++;
+                    }
+                    last = n;
+                }
+                if (answersCursor.getInt(2) == 1)
+                    correct = listAnswers.size();
+                listAnswers.add(answersCursor.getString(1));
+            }
+            fillAnswers(i, listAnswers, correct);
+            answersCursor.close();
+        }
 
         db.close();
         databaseHelper.close();
@@ -206,13 +210,16 @@ public class TestsExamActivity extends ActionBarActivity {
         public void run() {
             if (stoppedTimer)
                 return;
+
             long timeInMilliseconds = startTime - SystemClock.uptimeMillis();
+
             if (timeInMilliseconds <= 0) {
                 index = questions.length - 1;
                 nextQuestion(null);
                 finish();
                 return;
             }
+
             int secs = (int) (timeInMilliseconds / 1000);
             timerTextView.setText(String.format("Do konce testu zbývá: %02d:%02d", secs / 60, secs % 60));
             customHandler.postDelayed(this, 0);
