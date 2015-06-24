@@ -380,7 +380,7 @@ public class League {
             try {
                 db.execSQL(result.getSqlInsert(id, clubsHashMap.get(result.getHome()), clubsHashMap.get(result.getAway())));
             } catch (Exception e) {
-                Log.w("League error 1", e.getMessage());
+                e.printStackTrace();
             }
         for (NextMatch nextMatch : nextMatches)
             try {
@@ -389,7 +389,7 @@ public class League {
                 nextMatch.setIdLeagues(id);
                 db.execSQL(nextMatch.getSqlInsert());
             } catch (Exception e) {
-                Log.w("League error 2", e.getMessage());
+                e.printStackTrace();
             }
     }
 

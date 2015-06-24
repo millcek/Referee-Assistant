@@ -128,6 +128,7 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
                 databaseHelper.close();
                 Toast.makeText(mListener.getApplicationContext(), "region " + regions.get(position).getName() + (regions.get(position).isFavourite() ? " přidán do oblíbených" : " odebrán z oblíbených"), Toast.LENGTH_SHORT).show();
                 regionAdapter.notifyDataSetChanged();
+                mListener.reloadMenu();
             }
             return true;
         }
@@ -135,11 +136,10 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
     }
 
     public interface RegionFragmentInteractionListener {
-        public void loadRegion(Region region);
-
-        public void loadLeague(int id);
-
-        public Context getApplicationContext();
+        void loadRegion(Region region);
+        void loadLeague(int id);
+        void reloadMenu();
+        Context getApplicationContext();
     }
 
 }

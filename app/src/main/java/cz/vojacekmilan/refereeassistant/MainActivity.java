@@ -1,5 +1,6 @@
 package cz.vojacekmilan.refereeassistant;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -8,9 +9,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 import cz.vojacekmilan.refereeassistant.results.ClubFragment;
@@ -18,7 +22,9 @@ import cz.vojacekmilan.refereeassistant.results.LeagueFragment;
 import cz.vojacekmilan.refereeassistant.results.Region;
 import cz.vojacekmilan.refereeassistant.results.RegionFragment;
 import cz.vojacekmilan.refereeassistant.results.ResultSearchFragment;
+import cz.vojacekmilan.refereeassistant.tests.TestsExamLauncherActivity;
 import cz.vojacekmilan.refereeassistant.tests.TestsFragment;
+import cz.vojacekmilan.refereeassistant.tests.TestsPracticeActivity;
 
 
 public class MainActivity extends ActionBarActivity
@@ -60,20 +66,46 @@ public class MainActivity extends ActionBarActivity
             fragmentManager.popBackStack();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         if (titlesStack != null)
-            titlesStack.clear();
-        switch (position) {
-            case 0:
-                fragmentTransaction.replace(R.id.container, ResultSearchFragment.newInstance());
-                setTitle(null);
-                break;
-            case 1:
-                loadRegion(0);
-                break;
-            case 2:
-                fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
-                setTitle(null);
-                break;
+            titlesStack.clear();//TODO vybrat z db pocet oblibenych
+
+        DatabaseHelper databaseHelper = new DatabaseHelper(this, RegionFragment.DB_NAME);
+        databaseHelper.openDataBase();
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT _id FROM regions WHERE favourite=1 ORDER BY _id", null);
+        List<Integer> ids = new LinkedList<>();
+        while (cursor.moveToNext()) {
+            ids.add(cursor.getInt(0));
         }
+        cursor.close();
+        db.close();
+        databaseHelper.close();
+        int favouriteCount = ids.size();
+        Log.i("milda", String.format("pos: %d, favC: %d", position, favouriteCount));
+        if (position > 1 && position < favouriteCount + 2) {
+            loadRegion(ids.get(position - 2));
+        } else if (position < 2)
+            switch (position) {
+                case 0:
+                    fragmentTransaction.replace(R.id.container, ResultSearchFragment.newInstance());
+                    setTitle(null);
+                    break;
+                case 1:
+                    loadRegion(0);
+                    break;
+            }
+        else
+            switch (position - favouriteCount - 1) {
+                case 1:
+                    fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
+                    setTitle(null);
+                    break;
+                case 2:
+                    startActivity(new Intent(this, TestsPracticeActivity.class));
+                    break;
+                case 3:
+                    startActivity(new Intent(this, TestsExamLauncherActivity.class));
+                    break;
+            }
         fragmentTransaction.commit();
         if (mTitle == null || mTitle.length() == 0)
             setTitle(null);
@@ -127,6 +159,11 @@ public class MainActivity extends ActionBarActivity
 //
 //        return super.onOptionsItemSelected(item);
 //    }
+
+    public void reloadMenu() {
+        if (mNavigationDrawerFragment != null)
+            mNavigationDrawerFragment.reloadMenu();
+    }
 
     @Override
     public void loadRegion(Region region) {

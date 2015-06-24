@@ -12,12 +12,12 @@ import android.widget.TextView;
 /**
  * Created by milan on 16.4.15.
  */
-public class DrawerItemCustomAdapter  extends ArrayAdapter<ObjectDrawerItem> {
+public class DrawerItemCustomAdapter extends ArrayAdapter<DrawerItem> {
     Context mContext;
     int layoutResourceId;
-    ObjectDrawerItem data[] = null;
+    DrawerItem data[] = null;
 
-    public DrawerItemCustomAdapter(Context mContext, int layoutResourceId, ObjectDrawerItem[] data) {
+    public DrawerItemCustomAdapter(Context mContext, int layoutResourceId, DrawerItem[] data) {
 
         super(mContext, layoutResourceId, data);
         this.layoutResourceId = layoutResourceId;
@@ -36,11 +36,11 @@ public class DrawerItemCustomAdapter  extends ArrayAdapter<ObjectDrawerItem> {
         ImageView imageViewIcon = (ImageView) listItem.findViewById(R.id.imageViewIcon);
         TextView textViewName = (TextView) listItem.findViewById(R.id.text1);
 
-        ObjectDrawerItem folder = data[position];
+        DrawerItem folder = data[position];
 
-
-        imageViewIcon.setImageResource(folder.icon);
-        textViewName.setText(folder.name);
+        if (folder.getIcon() != null)
+            imageViewIcon.setImageDrawable(folder.getIcon());
+        textViewName.setText(folder.getName());
 
         return listItem;
     }

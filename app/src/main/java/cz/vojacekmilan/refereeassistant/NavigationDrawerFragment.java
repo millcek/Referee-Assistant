@@ -3,6 +3,8 @@ package cz.vojacekmilan.refereeassistant;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -11,6 +13,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,9 +21,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import cz.vojacekmilan.refereeassistant.results.RegionFragment;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -53,10 +60,11 @@ public class NavigationDrawerFragment extends Fragment {
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
     private View mFragmentContainerView;
-
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
+
+    private DrawerItem[] drawerItems;
 
     public NavigationDrawerFragment() {
     }
@@ -75,8 +83,54 @@ public class NavigationDrawerFragment extends Fragment {
             mFromSavedInstanceState = true;
         }
 
+        reloadMenu();
+
         // Select either the default item (0) or the last selected item.
         selectItem(mCurrentSelectedPosition);
+    }
+
+    public void reloadMenu() {
+        CharSequence[] menuList = getResources().getTextArray(R.array.menu);
+        List<List<String>> subMenuLists = new ArrayList<>(menuList.length);
+        for (CharSequence ignored : menuList)
+            subMenuLists.add(new LinkedList<String>());
+
+        DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), RegionFragment.DB_NAME);
+        databaseHelper.openDataBase();
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM regions WHERE favourite=1 ORDER BY _id", null);
+        while (cursor.moveToNext()) {
+            subMenuLists.get(1).add(cursor.getString(0));
+        }
+        cursor.close();
+        db.close();
+        databaseHelper.close();
+
+        subMenuLists.get(2).add(getActivity().getResources().getString(R.string.title_activity_tests_browsing));
+        subMenuLists.get(2).add(getActivity().getResources().getString(R.string.title_activity_tests_exam));
+
+        int[] iconArray = new int[]{R.drawable.ic_home,
+                R.drawable.ic_results,
+                R.drawable.ic_test};
+        int count = menuList.length;
+        for (List<String> list : subMenuLists)
+            count += list.size();
+        drawerItems = new DrawerItem[count];
+        int i = 0;
+        int j = 0;
+        for (List<String> list : subMenuLists) {
+            drawerItems[j++] = new DrawerItem(getResources().getDrawable(iconArray[i]), String.valueOf(menuList[i++]));
+            for (String s : list)
+                drawerItems[j++] = new DrawerItem(null, s);
+        }
+        for (DrawerItem drawerItem : drawerItems)
+            Log.i("drawerItems", drawerItem.getName());
+        //TODO obnovit listview
+        if (mDrawerListView != null) {
+            mDrawerListView.setAdapter(new DrawerItemCustomAdapter(getActivity(),
+                    R.layout.fragment_navigation_drawer_list_item, drawerItems));
+            mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
+        }
     }
 
     @Override
@@ -97,15 +151,8 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
-
-        ObjectDrawerItem[] drawerItem = new ObjectDrawerItem[3];
-
-        drawerItem[0] = new ObjectDrawerItem(R.drawable.ic_home, "Home");
-        drawerItem[1] = new ObjectDrawerItem(R.drawable.ic_results, "Výsledky");
-        drawerItem[2] = new ObjectDrawerItem(R.drawable.ic_test, "Testy");
-        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(
-                getActivity(),
-                R.layout.fragment_navigation_drawer_list_item, drawerItem));
+        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(getActivity(),
+                R.layout.fragment_navigation_drawer_list_item, drawerItems));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
@@ -189,6 +236,16 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     private void selectItem(int position) {
+        try {
+            drawerItems[mCurrentSelectedPosition].deactivate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            drawerItems[position].activate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         mCurrentSelectedPosition = position;
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, true);
