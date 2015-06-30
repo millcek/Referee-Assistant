@@ -6,29 +6,33 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import cz.vojacekmilan.refereeassistant.DatabaseHelper;
+import cz.vojacekmilan.refereeassistant.ListUtils;
 import cz.vojacekmilan.refereeassistant.R;
 
-public class RegionFragment extends Fragment implements AbsListView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class RegionFragment extends Fragment {
     public static final String DB_NAME = "results";
     public static final String ID_REGION = "id_region";
     private RegionFragmentInteractionListener mListener;
 
-    private ArrayAdapter regionAdapter;
-    private List<Region> regions;
+    private LeagueAdapter leagueAdapter;
+    private List<LeagueItem> leagues;
+    private RegionAdapter regionAdapter;
+    private List<RegionItem> regions;
     private int idRegion;
-    private int boundary;
 
     public static RegionFragment newInstance(int idRegion) {
         RegionFragment fragment = new RegionFragment();
@@ -47,9 +51,10 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
         super.onCreate(savedInstanceState);
         if (getArguments() != null)
             idRegion = getArguments().getInt(ID_REGION);
-        regions = new ArrayList<>();
-        regionAdapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, regions);
+        regions = new LinkedList<>();
+        leagues = new LinkedList<>();
+        regionAdapter = new RegionAdapter(getActivity(), R.layout.icon_list_item, regions);
+        leagueAdapter = new LeagueAdapter(getActivity(), R.layout.icon_list_item, leagues);
     }
 
     @Override
@@ -57,38 +62,71 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_result, container, false);
 
-        AbsListView regionListView = (AbsListView) view.findViewById(R.id.listRegions);
+        ListView regionListView = (ListView) view.findViewById(R.id.list_regions);
+        ListView leagueListView = (ListView) view.findViewById(R.id.list_leagues);
+
         regionListView.setAdapter(regionAdapter);
+        leagueListView.setAdapter(leagueAdapter);
 
-        regionListView.setOnItemClickListener(this);
-
-        regionListView.setOnItemLongClickListener(this);
-
+        regionListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (null != mListener) {
+                    mListener.loadRegion(regions.get(position).getId());
+                }
+            }
+        });
+        leagueListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (null != mListener) {
+                    mListener.loadLeague(leagues.get(position).getId());
+                }
+            }
+        });
+        leagueListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if (mListener != null) {
+                    DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
+                    databaseHelper.openDataBase();
+                    SQLiteDatabase db = databaseHelper.getReadableDatabase();
+                    leagues.get(position).setFavourite(!leagues.get(position).isFavourite());
+                    db.execSQL("UPDATE leagues SET favourite = " + (leagues.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + regions.get(position).getId());
+                    db.close();
+                    databaseHelper.close();
+                    Toast.makeText(mListener.getApplicationContext(), "soutěž " + leagues.get(position).getText() + (leagues.get(position).isFavourite() ? " přidána do oblíbených" : " odebrána z oblíbených"), Toast.LENGTH_SHORT).show();
+                    leagueAdapter.notifyDataSetChanged();
+                    mListener.reloadMenu();
+                }
+                return true;
+            }
+        });
         regions.clear();
-
+        leagues.clear();
         DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
         databaseHelper.openDataBase();
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        int i = 0;
-        Cursor cursor = db.rawQuery("SELECT _id, name FROM leagues WHERE id_regions = " + idRegion, null);
-        while (cursor.moveToNext()) {
-            regions.add(new Region(cursor.getInt(0), cursor.getString(1)));
-            i++;
-        }
-        boundary = i;
+        Cursor cursor = db.rawQuery("SELECT _id, name FROM regions WHERE id_regions = " + idRegion, null);
+        while (cursor.moveToNext())
+            regions.add(new RegionItem(cursor.getInt(0), R.drawable.ic_win, cursor.getString(1)));//TODO ikona
         cursor.close();
-        cursor = db.rawQuery("SELECT _id, name, favourite FROM regions WHERE id_regions = " + idRegion + ((idRegion == 0) ? " OR favourite=1 ORDER BY favourite DESC" : ""), null);
-        while (cursor.moveToNext()) {
-            Region region = new Region(cursor.getInt(0), cursor.getString(1));
-            if (cursor.getInt(2) == 1)
-                region.setFavourite(cursor.getInt(2) == 1);
-            regions.add(region);
-        }
+        cursor = db.rawQuery("SELECT _id, name, favourite FROM leagues WHERE id_regions = " + idRegion, null);
+        while (cursor.moveToNext())
+            leagues.add(new LeagueItem(cursor.getInt(0), R.drawable.ic_results, cursor.getString(1), cursor.getInt(2) == 1));//TODO ikona
         cursor.close();
         db.close();
         databaseHelper.close();
+        Log.i("leagues", Arrays.toString(leagues.toArray()));
+        Log.i("regions", Arrays.toString(regions.toArray()));
         regionAdapter.notifyDataSetChanged();
-
+        leagueAdapter.notifyDataSetChanged();
+        if (leagues.size() == 0)
+            ((TextView) view.findViewById(R.id.text_view_leagues)).setHeight(0);
+        if (regions.size() == 0)
+            ((TextView) view.findViewById(R.id.text_view_regions)).setHeight(0);
+        ListUtils.setDynamicHeight(regionListView);
+        ListUtils.setDynamicHeight(leagueListView);
         return view;
     }
 
@@ -104,41 +142,33 @@ public class RegionFragment extends Fragment implements AbsListView.OnItemClickL
         mListener = null;
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (null != mListener) {
-            if (position < boundary) {
-                mListener.loadLeague(regions.get(position).getId());
-            } else {
-                mListener.loadRegion(regions.get(position));
-            }
-        }
-    }
-
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position >= boundary) {
-            regions.get(position).negFavourite();
-            if (mListener != null) {
-                DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
-                databaseHelper.openDataBase();
-                SQLiteDatabase db = databaseHelper.getReadableDatabase();
-                db.execSQL("UPDATE regions SET favourite = " + (regions.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + regions.get(position).getId());
-                db.close();
-                databaseHelper.close();
-                Toast.makeText(mListener.getApplicationContext(), "region " + regions.get(position).getName() + (regions.get(position).isFavourite() ? " přidán do oblíbených" : " odebrán z oblíbených"), Toast.LENGTH_SHORT).show();
-                regionAdapter.notifyDataSetChanged();
-                mListener.reloadMenu();
-            }
-            return true;
-        }
-        return false;
-    }
+//    @Override
+//    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//        if (position >= boundary) {
+//            regions.get(position).negFavourite();
+//            if (mListener != null) {
+//                DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
+//                databaseHelper.openDataBase();
+//                SQLiteDatabase db = databaseHelper.getReadableDatabase();
+//                db.execSQL("UPDATE regions SET favourite = " + (regions.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + regions.get(position).getId());
+//                db.close();
+//                databaseHelper.close();
+//                Toast.makeText(mListener.getApplicationContext(), "region " + regions.get(position).getName() + (regions.get(position).isFavourite() ? " přidán do oblíbených" : " odebrán z oblíbených"), Toast.LENGTH_SHORT).show();
+//                regionAdapter.notifyDataSetChanged();
+//                mListener.reloadMenu();
+//            }
+//            return true;
+//        }
+//        return false;
+//    }
 
     public interface RegionFragmentInteractionListener {
-        void loadRegion(Region region);
+        void loadRegion(int id);
+
         void loadLeague(int id);
+
         void reloadMenu();
+
         Context getApplicationContext();
     }
 

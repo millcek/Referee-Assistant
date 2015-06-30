@@ -98,7 +98,7 @@ public class NavigationDrawerFragment extends Fragment {
         DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), RegionFragment.DB_NAME);
         databaseHelper.openDataBase();
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM regions WHERE favourite=1 ORDER BY _id", null);
+        Cursor cursor = db.rawQuery("SELECT name FROM leagues WHERE favourite=1 ORDER BY _id", null);
         while (cursor.moveToNext()) {
             subMenuLists.get(1).add(cursor.getString(0));
         }
@@ -119,15 +119,15 @@ public class NavigationDrawerFragment extends Fragment {
         int i = 0;
         int j = 0;
         for (List<String> list : subMenuLists) {
-            drawerItems[j++] = new DrawerItem(getResources().getDrawable(iconArray[i]), String.valueOf(menuList[i++]));
+            drawerItems[j++] = new DrawerItem(iconArray[i], String.valueOf(menuList[i++]));
             for (String s : list)
-                drawerItems[j++] = new DrawerItem(null, s);
+                drawerItems[j++] = new DrawerItem(R.id.icon, s);//TODO ikona
         }
         for (DrawerItem drawerItem : drawerItems)
             Log.i("drawerItems", drawerItem.getName());
         //TODO obnovit listview
         if (mDrawerListView != null) {
-            mDrawerListView.setAdapter(new DrawerItemCustomAdapter(getActivity(),
+            mDrawerListView.setAdapter(new DrawerItemAdapter(getActivity(),
                     R.layout.fragment_navigation_drawer_list_item, drawerItems));
             mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         }
@@ -145,13 +145,14 @@ public class NavigationDrawerFragment extends Fragment {
                              Bundle savedInstanceState) {
         mDrawerListView = (ListView) inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
+//        mDrawerListView = (ListView) container.findViewById(R.id.fragment_navigation_drawer_list);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new DrawerItemCustomAdapter(getActivity(),
+        mDrawerListView.setAdapter(new DrawerItemAdapter(getActivity(),
                 R.layout.fragment_navigation_drawer_list_item, drawerItems));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;

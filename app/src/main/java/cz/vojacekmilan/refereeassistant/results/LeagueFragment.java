@@ -243,7 +243,6 @@ public class LeagueFragment extends Fragment {
                 clubs.add(new Club(cursor.getInt(0), i, cursor.getString(1), cursor.getInt(2), cursor.getInt(3), cursor.getInt(4), cursor.getInt(5), cursor.getInt(6), cursor.getInt(7)));
                 i++;
             }
-            makeTable(clubs);
             final int finalId = idLeague;
             cursor = db.rawQuery("SELECT strftime('%s',updated), strftime('%s','now') FROM leagues WHERE _id = " + idLeague, null);
             if (cursor.moveToNext())
@@ -265,6 +264,7 @@ public class LeagueFragment extends Fragment {
             closeDb();
             loadResults();
             loadNextMatches(idLeague);
+            makeTable(clubs);
         }
     }
 

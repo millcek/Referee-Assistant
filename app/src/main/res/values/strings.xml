@@ -40,6 +40,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="title_activity_league">LeagueActivity</string>
     <string name="icon">ikona</string>
+    <string name="regions">Regiony</string>
+    <string name="leagues">Soutěže</string>
 
     <string-array name="menu">
         <item>Home</item>

@@ -3,29 +3,32 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/activated_background"
-    android:gravity="center_vertical"
+    android:gravity="center_horizontal"
     android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:orientation="horizontal"
     android:padding="10dp">
 
     <ImageView
-        android:id="@+id/imageViewIcon"
+        android:id="@+id/icon"
+        android:layout_gravity="center_vertical"
         android:layout_width="wrap_content"
-        android:alpha="0.87"
         android:layout_height="wrap_content"
+        android:alpha="0.87"
         android:contentDescription="@string/icon" />
 
     <TextView
-        android:id="@+id/text1"
+        android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
         android:layout_marginEnd="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_marginStart="16dp"
+        android:gravity="center_vertical"
         android:alpha="0.87"
         android:drawablePadding="16dp"
-        android:gravity="center_vertical"
-        android:textColor="#000000"
+        android:textColor="@color/black"
         android:textSize="14sp" />
 
 </LinearLayout>

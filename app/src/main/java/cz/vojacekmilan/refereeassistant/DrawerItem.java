@@ -1,27 +1,25 @@
 package cz.vojacekmilan.refereeassistant;
 
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
-
 /**
  * Created by milan on 15.4.15.
  */
 public class DrawerItem {
-    private Drawable icon;
+    private int icon;
     private String name;
+    private boolean active;
 
     // Constructor.
-    public DrawerItem(Drawable icon, String name) {
+    public DrawerItem(int icon, String name) {
         this.icon = icon;
         this.name = name;
+        active = false;
     }
 
-    public Drawable getIcon() {
+    public int getIcon() {
         return icon;
     }
 
-    public void setIcon(Drawable icon) {
+    public void setIcon(int icon) {
         this.icon = icon;
     }
 
@@ -34,13 +32,15 @@ public class DrawerItem {
     }
 
     public void activate() {
-        if (icon != null)
-            icon.setColorFilter(new PorterDuffColorFilter(R.color.primary_color, PorterDuff.Mode.MULTIPLY));
+        active = true;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 
     public void deactivate() {
-        if (icon != null)
-            icon.clearColorFilter();
+        active = false;
     }
 
     @Override

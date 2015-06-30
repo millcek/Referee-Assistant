@@ -183,13 +183,12 @@ public class League {
             public void run() {
                 String resultsUrl = league.getUrlString();
                 resultsUrl = (resultsUrl.contains("&") ? resultsUrl.substring(0, resultsUrl.indexOf("&")) : resultsUrl) + "&show=Vysledky";
-                TagNode rootResults = null;
                 try {
-                    rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
+                    TagNode rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
+                    league.setResults(getResults(rootResults, lastCompleteRound));
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }
-                league.setResults(getResults(rootResults, lastCompleteRound));
                 latch.countDown();
             }
         }).start();
@@ -218,8 +217,7 @@ public class League {
 
     private static List<Result> getResults(TagNode root, int lastCompleteRound) {
         final List<Result> results = new ArrayList<>();
-        root = getCleanTagNodes(
-                getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));
+        root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));
         List<Thread> threads = new LinkedList<>();
         try {
             int round = 1;

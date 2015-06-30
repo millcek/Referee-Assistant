@@ -6,7 +6,13 @@
     tools:context="cz.vojacekmilan.refereeassistant.results.RegionFragment">
 
     <GridView
-        android:id="@+id/listRegions"
+        android:id="@+id/list_regions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numColumns="1" />
+
+    <GridView
+        android:id="@+id/list_leagues"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:numColumns="1" />

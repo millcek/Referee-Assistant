@@ -1,4 +1,4 @@
-package cz.vojacekmilan.refereeassistant;
+package cz.vojacekmilan.refereeassistant.results;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,15 +9,19 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.List;
+
+import cz.vojacekmilan.refereeassistant.R;
+
 /**
  * Created by milan on 16.4.15.
  */
-public class DrawerItemCustomAdapter extends ArrayAdapter<DrawerItem> {
+public class RegionAdapter extends ArrayAdapter<RegionItem> {
     Context mContext;
     int layoutResourceId;
-    DrawerItem data[] = null;
+    List<RegionItem> data;
 
-    public DrawerItemCustomAdapter(Context mContext, int layoutResourceId, DrawerItem[] data) {
+    public RegionAdapter(Context mContext, int layoutResourceId, List<RegionItem> data) {
 
         super(mContext, layoutResourceId, data);
         this.layoutResourceId = layoutResourceId;
@@ -27,20 +31,16 @@ public class DrawerItemCustomAdapter extends ArrayAdapter<DrawerItem> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-
-        View listItem = convertView;
-
         LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
-        listItem = inflater.inflate(layoutResourceId, parent, false);
+        View listItem = inflater.inflate(layoutResourceId, parent, false);
 
-        ImageView imageViewIcon = (ImageView) listItem.findViewById(R.id.imageViewIcon);
-        TextView textViewName = (TextView) listItem.findViewById(R.id.text1);
+        ImageView imageViewIcon = (ImageView) listItem.findViewById(R.id.icon);
+        TextView textViewName = (TextView) listItem.findViewById(R.id.textView);
 
-        DrawerItem folder = data[position];
+        RegionItem folder = data.get(position);
 
-        if (folder.getIcon() != null)
-            imageViewIcon.setImageDrawable(folder.getIcon());
-        textViewName.setText(folder.getName());
+        imageViewIcon.setImageResource(folder.getIcon());
+        textViewName.setText(folder.getText());
 
         return listItem;
     }

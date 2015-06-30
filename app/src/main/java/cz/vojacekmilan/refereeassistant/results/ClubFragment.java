@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,7 +12,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -114,23 +112,28 @@ public class ClubFragment extends Fragment {
         databaseHelper.close();
     }
 
-    private TextView newTableTextView(String text) {
+    private TextView newTableTextView(String text, int textColor) {
         TextView textView = new TextView(mListener.getApplicationContext());
         textView.setLayoutParams(new TableRow.LayoutParams(
                 TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT));
         textView.setText(text);
         textView.setPadding(10, 10, 10, 10);
         textView.setTextAppearance(mListener.getApplicationContext(), android.R.style.TextAppearance_Small);
-        textView.setTextColor(Color.BLACK);
+        textView.setTextColor(getResources().getColor(textColor));
         return textView;
     }
+
+    private TextView newTableTextView(String text) {
+        return newTableTextView(text, R.color.black);
+    }
+
 
     private void makeResultsTable(List<Result> results) {
         resultsTableLayout.setColumnStretchable(1, true);
         TableLayout.LayoutParams tableLayoutParams = new TableLayout.LayoutParams(
                 TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
         TableRow headTableRow = new TableRow(mListener.getApplicationContext());
-        String[] columnNames = new String[]{"", "Domácí", "Hosté", "Výsledek"};
+        String[] columnNames = new String[]{"Domácí", "Hosté", "Výsledek"};
         for (String s : columnNames) {
             TextView textView = newTableTextView(s);
             textView.setTypeface(null, Typeface.ITALIC);
@@ -138,10 +141,8 @@ public class ClubFragment extends Fragment {
         }
         headTableRow.setLayoutParams(tableLayoutParams);
         resultsTableLayout.addView(headTableRow);
-        int i = 0;
         for (final Result result : results) {
             final TableRow tableRow = new TableRow(mListener.getApplicationContext());
-            tableRow.setBackgroundColor(Color.parseColor((i % 2 == 0) ? "#FFFFFF" : "#F0F0F0"));
             int homeScore, awayScore;
             if (result.getIdHome() == idClub) {
                 homeScore = result.getHomeScore();
@@ -150,20 +151,18 @@ public class ClubFragment extends Fragment {
                 awayScore = result.getHomeScore();
                 homeScore = result.getAwayScore();
             }
-            ImageView imageView = new ImageView(mListener.getApplicationContext());
             if (homeScore > awayScore)
-                imageView.setImageResource(R.drawable.icon_win);
+                tableRow.setBackgroundColor(getResources().getColor(R.color.win));
             else if (homeScore < awayScore)
-                imageView.setImageResource(R.drawable.icon_lose);
+                tableRow.setBackgroundColor(getResources().getColor(R.color.lose));
             else
-                imageView.setImageResource(R.drawable.icon_draw);
+                tableRow.setBackgroundColor(getResources().getColor(R.color.draw));
             tableRow.setGravity(Gravity.CENTER);
-            tableRow.addView(imageView);
-            tableRow.addView(newTableTextView(result.getHome().replace("&quot;", "\"")));
-            tableRow.addView(newTableTextView(result.getAway().replace("&quot;", "\"")));
-
-            TextView resultTextView = newTableTextView(result.getScore());
+            tableRow.addView(newTableTextView(result.getHome().replace("&quot;", "\""), R.color.white));
+            tableRow.addView(newTableTextView(result.getAway().replace("&quot;", "\""), R.color.white));
+            TextView resultTextView = newTableTextView(result.getScore(), R.color.white);
             resultTextView.setTypeface(null, Typeface.BOLD);
+            resultTextView.setGravity(Gravity.CENTER_HORIZONTAL);
             tableRow.addView(resultTextView);
             tableRow.setLayoutParams(tableLayoutParams);
             tableRow.setOnClickListener(new View.OnClickListener() {
@@ -173,7 +172,6 @@ public class ClubFragment extends Fragment {
                 }
             });
             resultsTableLayout.addView(tableRow);
-            i++;
         }
     }
 
