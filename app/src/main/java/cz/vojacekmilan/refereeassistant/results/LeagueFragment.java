@@ -482,8 +482,10 @@ public class LeagueFragment extends Fragment {
     public void onDestroy() {
         if (clubsAsyncTask != null)
             clubsAsyncTask.cancel(true);
-        if (swipeRefreshLayout != null)
+        if (swipeRefreshLayout != null) {
             swipeRefreshLayout.setRefreshing(false);
+            swipeRefreshLayout.removeAllViews();
+        }
         super.onDestroy();
     }
 
