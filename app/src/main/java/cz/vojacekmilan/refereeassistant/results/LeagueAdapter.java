@@ -35,7 +35,7 @@ public class LeagueAdapter extends ArrayAdapter<LeagueItem> {
         View listItem = inflater.inflate(layoutResourceId, parent, false);
 
         ImageView imageViewIcon = (ImageView) listItem.findViewById(R.id.icon);
-        TextView textViewName = (TextView) listItem.findViewById(R.id.textView);
+        TextView textViewName = (TextView) listItem.findViewById(R.id.text_view);
 
         LeagueItem folder = data.get(position);
 

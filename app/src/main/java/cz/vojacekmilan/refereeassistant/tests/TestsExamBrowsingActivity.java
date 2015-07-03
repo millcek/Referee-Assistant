@@ -76,7 +76,7 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
         answersTextView[2] = (TextView) findViewById(R.id.textViewAnswer3);
         answersTextView[3] = (TextView) findViewById(R.id.textViewAnswer4);
         questionTextView = (TextView) findViewById(R.id.questionTextView);
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
+        scrollView = (ScrollView) findViewById(R.id.scroll_view);
         fillerView = findViewById(R.id.fillerView);
     }
 

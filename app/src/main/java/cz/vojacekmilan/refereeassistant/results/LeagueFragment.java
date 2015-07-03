@@ -10,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +36,7 @@ import cz.vojacekmilan.refereeassistant.Utils;
 public class LeagueFragment extends Fragment {
 
     public static final String ID_LEAGUE = "id";
-    private LeagueFragmentInteractionListener mListener;
+    private OnFragmentInteractionListener mListener;
     private int idLeague;
     private int round;
     private int lastRound;
@@ -50,7 +49,6 @@ public class LeagueFragment extends Fragment {
     private ClubsAsyncTask clubsAsyncTask;
     private ImageButton nextRoundButton;
     private ImageButton prevRoundButton;
-    private boolean isRefreshing;
     private SQLiteDatabase db;
     private DatabaseHelper databaseHelper;
     public CountDownLatch insertedInDbLatch;
@@ -157,7 +155,7 @@ public class LeagueFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (LeagueFragmentInteractionListener) activity;
+            mListener = (OnFragmentInteractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -176,7 +174,7 @@ public class LeagueFragment extends Fragment {
             openDb();
             Cursor cursor = db.rawQuery(String.format("SELECT _id FROM clubs WHERE name = '%s' AND id_leagues = %d", club.getName(), idLeague), null);
             int id = -1;
-            if (cursor != null && cursor.moveToNext())
+            if (cursor.moveToNext())
                 id = cursor.getInt(0);
             cursor.close();
             closeDb();
@@ -187,8 +185,8 @@ public class LeagueFragment extends Fragment {
         }
     }
 
-    public interface LeagueFragmentInteractionListener {
-        public Context getApplicationContext();
+    public interface OnFragmentInteractionListener {
+        Context getApplicationContext();
 
         void loadClub(int id);
 
@@ -196,6 +194,7 @@ public class LeagueFragment extends Fragment {
 
         void loadRegion(int id);
     }
+
 
     private void loadResults() {
         resultsTableLayout.removeAllViews();
@@ -347,13 +346,7 @@ public class LeagueFragment extends Fragment {
 
     private void updateLeague(int id) {
         try {
-            isRefreshing = true;
-            swipeRefreshLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(isRefreshing);
-                }
-            });
+            swipeRefreshLayout.setRefreshing(true);
             clubsAsyncTask = new ClubsAsyncTask();
             clubsAsyncTask.execute(id);
             int time = (int) (System.currentTimeMillis() / 1000);
@@ -487,22 +480,21 @@ public class LeagueFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        if (clubsAsyncTask != null && !clubsAsyncTask.isDoInBackgroundComplete())
+        if (clubsAsyncTask != null)
             clubsAsyncTask.cancel(true);
+        if (swipeRefreshLayout != null)
+            swipeRefreshLayout.setRefreshing(false);
         super.onDestroy();
     }
 
     private class ClubsAsyncTask extends AsyncTask<Integer, String, League> {
         private int idLeague;
-        private boolean doInBackgroundComplete;
 
         @Override
         protected League doInBackground(Integer... params) {
             try {
-                this.doInBackgroundComplete = false;
                 idLeague = params[0];
                 openDb();
-                Log.i("LeagueFragment start", new SimpleDateFormat("mm:ss:SSS").format(new Date(System.currentTimeMillis())));
                 League l = League.getLeague(db, idLeague);
                 closeDb();
                 return l;
@@ -515,14 +507,11 @@ public class LeagueFragment extends Fragment {
         protected void onPostExecute(final League league) {
             try {
                 super.onPostExecute(league);
-                this.doInBackgroundComplete = true;
-                swipeRefreshLayout.setRefreshing(false);
                 if (league == null) {
                     Toast.makeText(mListener.getApplicationContext(), "Nelze navázat připojení k internetu", Toast.LENGTH_SHORT).show();//TODO osetrit, na telefonu nefunguje
                     return;
                 }
                 List<Result> results = league.getRoundResults(league.getLastRound());
-                Log.i("result.size()", String.valueOf(results.size()));
                 if (results.size() > 0) {
                     round = league.getLastRound();
                     lastRound = round;
@@ -531,17 +520,9 @@ public class LeagueFragment extends Fragment {
                 makeNextMatchesTable(league.getNextMatches());
                 makeTable(league.getClubs());
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        insertedInDbLatch = new CountDownLatch(1);
-                        openDb();
-                        league.updateClubsAndResults(db, idLeague);
-                        closeDb();
-                        insertedInDbLatch.countDown();
-                    }
-                }).start();
-                isRefreshing = false;
+                openDb();
+                league.updateClubsAndResults(db, idLeague);
+                closeDb();
                 swipeRefreshLayout.setRefreshing(false);
             } catch (Exception e) {
                 Toast.makeText(mListener.getApplicationContext(), "Stala se chyba", Toast.LENGTH_SHORT).show();
@@ -549,9 +530,6 @@ public class LeagueFragment extends Fragment {
             }
         }
 
-        public boolean isDoInBackgroundComplete() {
-            return doInBackgroundComplete;
-        }
     }
 
     private class ClubComparator implements Comparator<Club> {

@@ -162,7 +162,7 @@ public class TestsExamActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_exam);
 
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
+        scrollView = (ScrollView) findViewById(R.id.scroll_view);
         previousButton = (Button) findViewById(R.id.prevButton);
         nextButton = (Button) findViewById(R.id.nextButton);
         answersRadioGroup = (RadioGroup) findViewById(R.id.answersRadioGroup);

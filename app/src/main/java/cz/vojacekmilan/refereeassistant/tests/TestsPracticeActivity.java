@@ -38,7 +38,7 @@ public class TestsPracticeActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tests_practice);
 
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
+        scrollView = (ScrollView) findViewById(R.id.scroll_view);
         nextButton = (Button) findViewById(R.id.nextButton);
         prevButton = (Button) findViewById(R.id.prevButton);
         answersRadioGroup = (RadioGroup) findViewById(R.id.answersRadioGroup);

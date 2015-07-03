@@ -35,7 +35,7 @@ public class RegionAdapter extends ArrayAdapter<RegionItem> {
         View listItem = inflater.inflate(layoutResourceId, parent, false);
 
         ImageView imageViewIcon = (ImageView) listItem.findViewById(R.id.icon);
-        TextView textViewName = (TextView) listItem.findViewById(R.id.textView);
+        TextView textViewName = (TextView) listItem.findViewById(R.id.text_view);
 
         RegionItem folder = data.get(position);
 

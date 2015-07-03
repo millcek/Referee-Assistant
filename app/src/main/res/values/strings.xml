@@ -36,12 +36,13 @@
     <string name="results">Výsledky</string>
     <string name="refresh">Aktualizovat</string>
     <string name="title_activity_main">Asistent Rozhodčího</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="title_activity_league">LeagueActivity</string>
     <string name="icon">ikona</string>
     <string name="regions">Regiony</string>
     <string name="leagues">Soutěže</string>
+    <string name="image">obrázek</string>
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Close</string>
 
     <string-array name="menu">
         <item>Home</item>

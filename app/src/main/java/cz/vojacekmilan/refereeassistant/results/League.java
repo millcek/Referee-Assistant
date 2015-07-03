@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 import cz.vojacekmilan.refereeassistant.Utils;
 
@@ -135,70 +134,34 @@ public class League {
                 "\n}";
     }
 
-    public static League getLeague(SQLiteDatabase db, int id) {
+    public static League getLeague(SQLiteDatabase db, int id) throws XPatherException, InterruptedException, MalformedURLException {
         Cursor leagueCursor = db.rawQuery("SELECT url FROM leagues WHERE _id = " + id, null);
         String url = null;
         if (leagueCursor.moveToNext())
             url = leagueCursor.getString(0);
         leagueCursor.close();
-        try {
-            return getLeague(url, getLastCompleteRound(db, id));
-        } catch (MalformedURLException | XPatherException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return getLeague(url, getLastCompleteRound(db, id));
     }
 
-    public static League getLeague(String url, int lastCompleteRound) throws MalformedURLException, XPatherException {
+    public static League getLeague(String url, int lastCompleteRound) throws MalformedURLException, XPatherException, InterruptedException {
         return getLeague(new League(url), lastCompleteRound);
     }
 
-    public static League getLeague(final League league, final int lastCompleteRound) throws MalformedURLException, XPatherException {
+    public static League getLeague(final League league, final int lastCompleteRound) throws MalformedURLException, XPatherException, InterruptedException {
         String clubsUrl = league.getUrlString();
         clubsUrl = (clubsUrl.contains("&") ? clubsUrl.substring(0, clubsUrl.indexOf("&")) : clubsUrl) + "&show=Aktual";
         final TagNode rootClubs = getCleanTagNodes(new URL(clubsUrl), Results.CHARSET);
-        final CountDownLatch latch = new CountDownLatch(3);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    league.setClubs(getClubs(rootClubs));
-                    latch.countDown();
-                } catch (MalformedURLException | XPatherException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                league.setNextMatches(getNextMatches(rootClubs));
-                latch.countDown();
-            }
-        }).start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String resultsUrl = league.getUrlString();
-                resultsUrl = (resultsUrl.contains("&") ? resultsUrl.substring(0, resultsUrl.indexOf("&")) : resultsUrl) + "&show=Vysledky";
-                try {
-                    TagNode rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
-                    league.setResults(getResults(rootResults, lastCompleteRound));
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                latch.countDown();
-            }
-        }).start();
+        league.setClubs(getClubs(rootClubs));
+        league.setNextMatches(getNextMatches(rootClubs));
+        String resultsUrl = league.getUrlString();
+        resultsUrl = (resultsUrl.contains("&") ? resultsUrl.substring(0, resultsUrl.indexOf("&")) : resultsUrl) + "&show=Vysledky";
         try {
-            latch.await();
-            return league;
-        } catch (InterruptedException e) {
+            TagNode rootResults = getCleanTagNodes(new URL(resultsUrl), Results.CHARSET);
+            league.setResults(getResults(rootResults, lastCompleteRound));
+        } catch (MalformedURLException e) {
             e.printStackTrace();
-            return null;
         }
+        return league;
     }
 
     private static List<NextMatch> getNextMatches(TagNode root) {
@@ -218,35 +181,17 @@ public class League {
     private static List<Result> getResults(TagNode root, int lastCompleteRound) {
         final List<Result> results = new ArrayList<>();
         root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div", "utf-8"));
-        List<Thread> threads = new LinkedList<>();
         try {
             int round = 1;
             Log.i("getResults", "lastCompleteRound = " + lastCompleteRound);
             for (final Object tableObject : root.evaluateXPath("//table")) {
-                if (round > lastCompleteRound) {
-                    final int finalRound = round;
-                    Thread thread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            results.addAll(getResultsFromTable((TagNode) tableObject, finalRound));
-                        }
-                    });
-                    threads.add(thread);
-                    thread.start();
-                }
+                if (round > lastCompleteRound)
+                    results.addAll(getResultsFromTable((TagNode) tableObject, round));
                 round++;
             }
-
         } catch (XPatherException e) {
             e.printStackTrace();
         }
-        for (Thread thread : threads)
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return null;
-            }
         return results;
     }
 
@@ -284,25 +229,8 @@ public class League {
         root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[2]", "utf-8"));
         String htmlTable = "<html><head></head><body><table><tbody>" + getSerializedHtml(root, "//tr[@bgcolor='#f8f8f8']") + getSerializedHtml(root, "//tr[@bgcolor='#ffffff']") + "</tbody></table></body></html>";
         TagNode htmlTableTagNode = getCleanTagNodes(htmlTable);
-        List<Thread> threads = new ArrayList<>();
-        for (Object o : htmlTableTagNode.evaluateXPath("//tr")) {
-            final TagNode tn = (TagNode) o;
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    clubs.add(getClubFromRow(tn));
-                }
-            });
-            thread.start();
-            threads.add(thread);
-        }
-        for (Thread thread : threads)
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return null;
-            }
+        for (Object o : htmlTableTagNode.evaluateXPath("//tr"))
+            clubs.add(getClubFromRow((TagNode) o));
         return clubs;
     }
 

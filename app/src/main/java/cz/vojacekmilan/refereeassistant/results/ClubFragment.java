@@ -27,7 +27,7 @@ import cz.vojacekmilan.refereeassistant.Utils;
 public class ClubFragment extends Fragment {
     private static final String ID = "id";
     private int idClub;
-    private ClubFragmentInteractionListener mListener;
+    private OnFragmentInteractionListener mListener;
     private TableLayout resultsTableLayout;
 
     public static ClubFragment newInstance(int id) {
@@ -62,7 +62,7 @@ public class ClubFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mListener = (ClubFragmentInteractionListener) activity;
+            mListener = (OnFragmentInteractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -75,7 +75,7 @@ public class ClubFragment extends Fragment {
         mListener = null;
     }
 
-    public interface ClubFragmentInteractionListener {
+    public interface OnFragmentInteractionListener {
         public Context getApplicationContext();
     }
 

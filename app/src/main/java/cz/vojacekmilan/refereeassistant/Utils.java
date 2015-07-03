@@ -46,7 +46,7 @@ public class Utils {
         View layout = inflater.inflate(R.layout.popup_text_view, null, false);
         final PopupWindow pw = new PopupWindow(layout, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
         pw.setBackgroundDrawable(new BitmapDrawable());
-        TextView textView = ((TextView) layout.findViewById(R.id.textView));
+        TextView textView = ((TextView) layout.findViewById(R.id.text_view));
         textView.setText(text.replace(": ", ":").replace(":", ": ").replaceAll("\n", "").replace(";", "\n"));
         textView.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -26,7 +26,7 @@ import cz.vojacekmilan.refereeassistant.R;
 public class RegionFragment extends Fragment {
     public static final String DB_NAME = "results";
     public static final String ID_REGION = "id_region";
-    private RegionFragmentInteractionListener mListener;
+    private OnFragmentInteractionListener mListener;
 
     private LeagueAdapter leagueAdapter;
     private List<LeagueItem> leagues;
@@ -92,7 +92,7 @@ public class RegionFragment extends Fragment {
                     databaseHelper.openDataBase();
                     SQLiteDatabase db = databaseHelper.getReadableDatabase();
                     leagues.get(position).setFavourite(!leagues.get(position).isFavourite());
-                    db.execSQL("UPDATE leagues SET favourite = " + (leagues.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + regions.get(position).getId());
+                    db.execSQL("UPDATE leagues SET favourite = " + (leagues.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + leagues.get(position).getId());
                     db.close();
                     databaseHelper.close();
                     Toast.makeText(mListener.getApplicationContext(), "soutěž " + leagues.get(position).getText() + (leagues.get(position).isFavourite() ? " přidána do oblíbených" : " odebrána z oblíbených"), Toast.LENGTH_SHORT).show();
@@ -109,7 +109,7 @@ public class RegionFragment extends Fragment {
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT _id, name FROM regions WHERE id_regions = " + idRegion, null);
         while (cursor.moveToNext())
-            regions.add(new RegionItem(cursor.getInt(0), R.drawable.ic_win, cursor.getString(1)));//TODO ikona
+            regions.add(new RegionItem(cursor.getInt(0), R.drawable.ic_region, cursor.getString(1)));//TODO ikona
         cursor.close();
         cursor = db.rawQuery("SELECT _id, name, favourite FROM leagues WHERE id_regions = " + idRegion, null);
         while (cursor.moveToNext())
@@ -133,7 +133,7 @@ public class RegionFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mListener = (RegionFragmentInteractionListener) activity;
+        mListener = (OnFragmentInteractionListener) activity;
     }
 
     @Override
@@ -142,27 +142,7 @@ public class RegionFragment extends Fragment {
         mListener = null;
     }
 
-//    @Override
-//    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//        if (position >= boundary) {
-//            regions.get(position).negFavourite();
-//            if (mListener != null) {
-//                DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
-//                databaseHelper.openDataBase();
-//                SQLiteDatabase db = databaseHelper.getReadableDatabase();
-//                db.execSQL("UPDATE regions SET favourite = " + (regions.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + regions.get(position).getId());
-//                db.close();
-//                databaseHelper.close();
-//                Toast.makeText(mListener.getApplicationContext(), "region " + regions.get(position).getName() + (regions.get(position).isFavourite() ? " přidán do oblíbených" : " odebrán z oblíbených"), Toast.LENGTH_SHORT).show();
-//                regionAdapter.notifyDataSetChanged();
-//                mListener.reloadMenu();
-//            }
-//            return true;
-//        }
-//        return false;
-//    }
-
-    public interface RegionFragmentInteractionListener {
+    public interface OnFragmentInteractionListener {
         void loadRegion(int id);
 
         void loadLeague(int id);
