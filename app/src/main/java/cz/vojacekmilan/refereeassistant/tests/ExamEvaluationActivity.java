@@ -4,17 +4,19 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 
 import cz.vojacekmilan.refereeassistant.R;
 
 
-public class TestsExamEvaluationActivity extends ActionBarActivity {
+public class ExamEvaluationActivity extends AppCompatActivity {
 
     private Question[] questions;
     private int wrongAnswersCount;
@@ -23,8 +25,8 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
     int minutes;
 
     public void startBrowsingAllQuestions(View view) {
-        Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
-        intent.putExtra(TestsFragment.QUESTIONS, questions);
+        Intent intent = new Intent(this, ExamBrowsingActivity.class);
+        intent.putExtra(Tests.QUESTIONS, questions);
         startActivity(intent);
     }
 
@@ -36,15 +38,15 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
                 wrongQuestions[index] = q;
                 index++;
             }
-        Intent intent = new Intent(this, TestsExamBrowsingActivity.class);
-        intent.putExtra(TestsFragment.QUESTIONS, wrongQuestions);
+        Intent intent = new Intent(this, ExamBrowsingActivity.class);
+        intent.putExtra(Tests.QUESTIONS, wrongQuestions);
         startActivity(intent);
     }
 
     public void startExam(View view) {
-        Intent intent = new Intent(this, TestsExamActivity.class);
-        intent.putExtra(TestsFragment.QUESTIONS_COUNT, questions.length);
-        intent.putExtra(TestsFragment.TIME, minutes);
+        Intent intent = new Intent(this, ExamActivity.class);
+        intent.putExtra(Tests.QUESTIONS_COUNT, questions.length);
+        intent.putExtra(Tests.TIME, minutes);
         startActivity(intent);
         finish();
     }
@@ -56,22 +58,23 @@ public class TestsExamEvaluationActivity extends ActionBarActivity {
 
         buttonAllQuestions = (Button) findViewById(R.id.buttonAllQuestions);
         buttonWrongQuestions = (Button) findViewById(R.id.buttonWrongQuestions);
-        TextView textViewErrorsCount = (TextView) findViewById(R.id.textViewErrorsCount);
+        TextView textViewErrorsCount = (TextView) findViewById(R.id.text_view_errors_count);
 
         Bundle b = getIntent().getExtras();
-        Parcelable[] parcelableArray = b.getParcelableArray(TestsFragment.QUESTIONS);
+        Parcelable[] parcelableArray = b.getParcelableArray(Tests.QUESTIONS);
         if (parcelableArray != null)
             questions = Arrays.copyOf(parcelableArray, parcelableArray.length, Question[].class);
-        minutes = b.getInt(TestsFragment.TIME);
+        minutes = b.getInt(Tests.TIME);
 
         wrongAnswersCount = 0;
         for (Question q : questions)
             if (!q.isCorrectlyAnswered())
                 wrongAnswersCount++;
 
-        float percentage = 100 / questions.length * wrongAnswersCount;
+        float percentage = (((float)100)/questions.length*wrongAnswersCount);
         if (percentage > 0) {
-            textViewErrorsCount.setText(String.format("%d (~%d%%)", wrongAnswersCount, Math.round(percentage)));
+            textViewErrorsCount.setText(String.format("%d (~%s %%)", wrongAnswersCount,
+                    new DecimalFormat("##.0").format(percentage)));
             textViewErrorsCount.setTextColor(Color.RED);
         } else {
             textViewErrorsCount.setText(String.format("%d", wrongAnswersCount));

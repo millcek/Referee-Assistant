@@ -3,33 +3,45 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="cz.vojacekmilan.refereeassistant.results.HomeFragment">
+    tools:context="cz.vojacekmilan.refereeassistant.delegations.HomeFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <SearchView
-            android:id="@+id/search_view"
+        <TextView
+            android:id="@+id/text_view_no_delegation"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
+            android:text="@string/no_delegation"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/text_view_updated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <ListView
             android:id="@+id/list_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:divider="@color/transparent"
+            android:dividerHeight="@dimen/default_padding" />
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/floating_action_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/fab_margin"
         android:layout_gravity="bottom|end"
-        android:src="@drawable/bt_plus"
-        app:borderWidth="0dp"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/bt_edit"
         app:backgroundTint="@color/accent"
+        app:borderWidth="0dp"
         app:fabSize="normal" />
 
 </FrameLayout>

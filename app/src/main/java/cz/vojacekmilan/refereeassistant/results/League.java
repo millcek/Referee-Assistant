@@ -29,7 +29,7 @@ public class League {
     private String urlString;
     private List<Result> results;
     private List<Club> clubs;
-    private List<NextMatch> nextMatches;
+    private List<NextMatchAdapter.NextMatch> nextMatches;
 
     public League(int id, String name, String urlString, List<Result> results, List<Club> clubs) {
         this.id = id;
@@ -75,11 +75,11 @@ public class League {
         return max;
     }
 
-    public List<NextMatch> getNextMatches() {
+    public List<NextMatchAdapter.NextMatch> getNextMatches() {
         return nextMatches;
     }
 
-    public void setNextMatches(List<NextMatch> nextMatches) {
+    public void setNextMatches(List<NextMatchAdapter.NextMatch> nextMatches) {
         this.nextMatches = nextMatches;
     }
 
@@ -164,14 +164,14 @@ public class League {
         return league;
     }
 
-    private static List<NextMatch> getNextMatches(TagNode root) {
-        List<NextMatch> nextMatches = new ArrayList<>();
+    private static List<NextMatchAdapter.NextMatch> getNextMatches(TagNode root) {
+        List<NextMatchAdapter.NextMatch> nextMatches = new ArrayList<>();
         root = getCleanTagNodes(getSerializedHtml(root, "//*[@id=\"maincontainer\"]/table/tbody/tr/td[2]/div//table[3]"));
         try {
             for (Object o : root.evaluateXPath("//tr[@bgcolor='#f8f8f8']"))
-                nextMatches.add(new NextMatch(((TagNode) o).evaluateXPath("//td/text()")));
+                nextMatches.add(new NextMatchAdapter.NextMatch(((TagNode) o).evaluateXPath("//td/text()")));
             for (Object o : root.evaluateXPath("//tr[@bgcolor='#ffffff']"))
-                nextMatches.add(new NextMatch(((TagNode) o).evaluateXPath("//td/text()")));
+                nextMatches.add(new NextMatchAdapter.NextMatch(((TagNode) o).evaluateXPath("//td/text()")));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -308,10 +308,10 @@ public class League {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        for (NextMatch nextMatch : nextMatches)
+        for (NextMatchAdapter.NextMatch nextMatch : nextMatches)
             try {
-                nextMatch.setIdClubsHome(clubsHashMap.get(nextMatch.getClubsHome()));
-                nextMatch.setIdClubsAway(clubsHashMap.get(nextMatch.getClubsAway()));
+                nextMatch.setIdClubsHome(clubsHashMap.get(nextMatch.getHome()));
+                nextMatch.setIdClubsAway(clubsHashMap.get(nextMatch.getAway()));
                 nextMatch.setIdLeagues(id);
                 db.execSQL(nextMatch.getSqlInsert());
             } catch (Exception e) {

@@ -16,28 +16,35 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:padding="@dimen/default_padding"
-            android:text="@string/regions" />
+            android:layout_marginTop="@dimen/default_padding"
+            android:layout_marginLeft="@dimen/default_padding"
+            android:layout_marginRight="@dimen/default_padding"
+            android:text="@string/regions"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <ListView
             android:id="@+id/list_regions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/text_view_regions" />
-
+            android:layout_below="@id/text_view_regions"
+            style="@style/ShadowNoSideMargin" />
 
         <TextView
             android:id="@+id/text_view_leagues"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/list_regions"
-            android:padding="@dimen/default_padding"
-            android:text="@string/leagues" />
+            android:layout_marginTop="@dimen/default_padding"
+            android:layout_marginLeft="@dimen/default_padding"
+            android:layout_marginRight="@dimen/default_padding"
+            android:text="@string/leagues"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <ListView
             android:id="@+id/list_leagues"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/text_view_leagues" />
+            android:layout_below="@+id/text_view_leagues"
+            style="@style/ShadowNoSideMargin" />
     </RelativeLayout>
 </ScrollView>

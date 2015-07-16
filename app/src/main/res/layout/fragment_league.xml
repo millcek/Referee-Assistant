@@ -1,6 +1,6 @@
 <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/swipeRefreshLayout"
+    android:id="@+id/swipe_refresh_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="cz.vojacekmilan.refereeassistant.results.LeagueFragment">
@@ -16,95 +16,113 @@
             android:orientation="vertical">
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="@dimen/default_padding">
 
-                <ImageButton
-                    android:id="@+id/prevRoundButton"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/text_view_round"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:text="@string/results"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
+
+                <ImageButton
+                    android:id="@+id/button_prev_round"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
                     android:background="@color/transparent"
                     android:contentDescription="@string/previous"
                     android:padding="@dimen/default_padding_min"
-                    android:src="@drawable/arrow_prev_off" />
-
-                <TextView
-                    android:id="@+id/roundTextView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/results"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textColor="@color/primary" />
+                    android:src="@drawable/arrow_prev" />
 
                 <ImageButton
-                    android:id="@+id/nextRoundButton"
+                    android:id="@+id/button_next_round"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:layout_gravity="end"
                     android:background="@color/transparent"
                     android:contentDescription="@string/next"
                     android:padding="@dimen/default_padding_min"
-                    android:src="@drawable/arrow_next_off" />
+                    android:src="@drawable/arrow_next" />
+
             </LinearLayout>
 
-            <HorizontalScrollView
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/text_view_no_results"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal">
+                android:padding="@dimen/default_padding"
+                android:text="@string/no_results" />
 
-                <TableLayout
-                    android:id="@+id/resultsTableLayout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent" />
-            </HorizontalScrollView>
+            <ListView
+                android:id="@+id/list_view_results"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                style="@style/ShadowNoSideMargin"
+                android:paddingBottom="@dimen/default_padding_min"
+                android:paddingTop="@dimen/default_padding_min" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
+                android:padding="@dimen/default_padding"
                 android:text="@string/table"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/primary" />
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <TextView
+                android:id="@+id/text_view_unavailable_table"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_padding"
+                android:text="@string/unavailable_table" />
 
             <HorizontalScrollView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal">
+                style="@style/ShadowNoSideMargin">
 
                 <TableLayout
-                    android:id="@+id/tableTableLayout"
+                    android:id="@+id/table_layout_table"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent" />
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:divider="@drawable/horizontal_divider_1"
+                    android:dividerPadding="1dp"
+                    android:showDividers="middle" />
             </HorizontalScrollView>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
+                android:padding="@dimen/default_padding"
                 android:text="@string/next_matches"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/primary" />
-
-            <HorizontalScrollView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal">
-
-                <TableLayout
-                    android:id="@+id/nextMatchesTableLayout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent" />
-            </HorizontalScrollView>
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView
-                android:id="@+id/updatedTextView"
+                android:id="@+id/text_view_no_next_matches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_padding"
+                android:text="@string/no_next_matches" />
+
+            <ListView
+                android:id="@+id/list_view_next_matches"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                style="@style/ShadowNoSideMargin"
+                android:paddingBottom="@dimen/default_padding_min"
+                android:paddingTop="@dimen/default_padding_min" />
+
+            <TextView
+                android:id="@+id/text_view_updated"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal" />
+                android:padding="@dimen/default_padding" />
         </LinearLayout>
     </ScrollView>
 </android.support.v4.widget.SwipeRefreshLayout>

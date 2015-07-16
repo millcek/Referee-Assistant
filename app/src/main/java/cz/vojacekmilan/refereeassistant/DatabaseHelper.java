@@ -1,10 +1,13 @@
 package cz.vojacekmilan.refereeassistant;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.FileOutputStream;
@@ -27,6 +30,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.dbPath = context.getDatabasePath(dbName).getPath();
         this.myContext = context;
     }
+
+    public Cursor rawQuery(String query) {
+        return this.rawQuery(query, null);
+    }
+
+    public Cursor rawQuery(String query, @Nullable String[] selectionArgs) {
+        if (myDataBase == null || !myDataBase.isOpen())
+            this.openDataBase();
+        return myDataBase.rawQuery(query, selectionArgs);
+    }
+
+    public void execSQL(String sql) {
+        SQLiteDatabase writableDatabase = this.getWritableDatabase();
+        writableDatabase.execSQL(sql);
+        writableDatabase.close();
+    }
+
 
     public void createDataBase() throws IOException {
         boolean dbExist = checkDataBase();
@@ -80,7 +100,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
-        if (myDataBase != null)
+        if (myDataBase != null && myDataBase.isOpen())
             myDataBase.close();
         super.close();
     }
@@ -88,6 +108,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
+    }
+
+    public SQLiteStatement compileStatement(String sql) {
+        if (myDataBase == null || !myDataBase.isOpen())
+            this.openDataBase();
+        return myDataBase.compileStatement(sql);
     }
 
     @Override

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/default_padding"
+    android:background="@drawable/shadow">
+
+    <TableRow
+        android:background="@drawable/primary_clickable"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/text_view_league"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/white" />
+
+    </TableRow>
+
+    <TableRow
+        android:background="@drawable/white_clickable"
+        android:paddingBottom="@dimen/default_padding_min"
+        android:paddingLeft="@dimen/default_padding"
+        android:paddingRight="@dimen/default_padding"
+        android:paddingTop="@dimen/default_padding_min">
+
+        <TextView
+            android:id="@+id/text_view_home"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:textColor="@color/primary_text" />
+
+        <TextView
+            android:id="@+id/text_view_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:singleLine="true"
+            android:textColor="@color/secondary_text" />
+    </TableRow>
+
+    <TableRow
+        android:background="@drawable/white_clickable"
+        android:paddingLeft="@dimen/default_padding"
+        android:paddingRight="@dimen/default_padding">
+
+        <TextView
+            android:id="@+id/text_view_away"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:textColor="@color/primary_text" />
+
+        <TextView
+            android:id="@+id/text_view_field"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:singleLine="true"
+            android:textColor="@color/secondary_text" />
+    </TableRow>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/default_padding_min"
+        android:paddingTop="@dimen/default_padding_min"
+        android:background="@drawable/white_clickable"
+        android:src="@drawable/horizontal_divider_1" />
+
+    <TableRow
+        android:background="@drawable/white_clickable"
+        android:paddingBottom="@dimen/default_padding_min"
+        android:paddingLeft="@dimen/default_padding"
+        android:paddingRight="@dimen/default_padding">
+
+        <TextView
+            android:id="@+id/text_view_hr"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:textColor="@color/primary_text"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_view_ar1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="@color/primary_text"
+            android:textStyle="bold" />
+    </TableRow>
+
+    <TableRow
+        android:background="@drawable/white_clickable"
+        android:paddingBottom="@dimen/default_padding"
+        android:paddingLeft="@dimen/default_padding"
+        android:paddingRight="@dimen/default_padding">
+
+        <TextView
+            android:id="@+id/text_view_ds"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:textColor="@color/primary_text" />
+
+        <TextView
+            android:id="@+id/text_view_ar2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="@color/primary_text"
+            android:textStyle="bold" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/table_row_delegates"
+        android:background="@drawable/white_clickable"
+        android:paddingBottom="@dimen/default_padding"
+        android:paddingLeft="@dimen/default_padding"
+        android:paddingRight="@dimen/default_padding">
+
+
+        <TextView
+            android:id="@+id/text_view_r4"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:textColor="@color/primary_text" />
+
+        <TextView
+            android:id="@+id/text_view_td"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="@color/primary_text" />
+    </TableRow>
+
+</TableLayout>

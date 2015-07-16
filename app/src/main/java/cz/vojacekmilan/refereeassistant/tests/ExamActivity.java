@@ -6,7 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -21,7 +24,8 @@ import java.util.Random;
 import cz.vojacekmilan.refereeassistant.DatabaseHelper;
 import cz.vojacekmilan.refereeassistant.R;
 
-public class TestsExamActivity extends ActionBarActivity {
+public class ExamActivity extends AppCompatActivity implements
+        GestureDetector.OnGestureListener {
     private Question[] questions;
     private int index;
     private boolean stoppedTimer;
@@ -61,9 +65,9 @@ public class TestsExamActivity extends ActionBarActivity {
 
     public void nextQuestion(View view) {
         if (index == questions.length - 1) {
-            Intent intent = new Intent(this, TestsExamEvaluationActivity.class);
-            intent.putExtra(TestsFragment.QUESTIONS, questions);
-            intent.putExtra(TestsFragment.TIME, minutes);
+            Intent intent = new Intent(this, ExamEvaluationActivity.class);
+            intent.putExtra(Tests.QUESTIONS, questions);
+            intent.putExtra(Tests.TIME, minutes);
             stoppedTimer = true;
             startActivity(intent);
             finish();
@@ -87,8 +91,14 @@ public class TestsExamActivity extends ActionBarActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        stoppedTimer = true;
+    }
+
     private void generateQuestions(int questionCount) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this, TestsFragment.DB_NAME);
+        DatabaseHelper databaseHelper = new DatabaseHelper(this, Tests.DB_NAME);
         databaseHelper.openDataBase();
 
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
@@ -101,7 +111,7 @@ public class TestsExamActivity extends ActionBarActivity {
 
         for (int i = 0; i < questionCount; i++) {
             questions[i] = new Question();
-            do n = random.nextInt(TestsFragment.DB_QUESTIONS_COUNT) + 1;
+            do n = random.nextInt(Tests.DB_QUESTIONS_COUNT) + 1;
             while (randomValues.contains(n));
             randomValues.add(n);
             queryStringBuilder.append(" _id=").append(n).append((i != questionCount - 1) ? " OR" : "");
@@ -163,43 +173,24 @@ public class TestsExamActivity extends ActionBarActivity {
         setContentView(R.layout.activity_tests_exam);
 
         scrollView = (ScrollView) findViewById(R.id.scroll_view);
-        previousButton = (Button) findViewById(R.id.prevButton);
-        nextButton = (Button) findViewById(R.id.nextButton);
-        answersRadioGroup = (RadioGroup) findViewById(R.id.answersRadioGroup);
+        previousButton = (Button) findViewById(R.id.prev_button);
+        nextButton = (Button) findViewById(R.id.next_button);
+        answersRadioGroup = (RadioGroup) findViewById(R.id.radio_group_answers);
         answersRadioButton = new RadioButton[4];
-        questionTextView = (TextView) findViewById(R.id.questionTextView);
-        timerTextView = (TextView) findViewById(R.id.timerTextView);
+        questionTextView = (TextView) findViewById(R.id.text_view_question);
+        timerTextView = (TextView) findViewById(R.id.text_view_timer);
 
-        answersRadioButton[0] = (RadioButton) findViewById(R.id.radioButton1);
-        answersRadioButton[1] = (RadioButton) findViewById(R.id.radioButton2);
-        answersRadioButton[2] = (RadioButton) findViewById(R.id.radioButton3);
-        answersRadioButton[3] = (RadioButton) findViewById(R.id.radioButton4);
+        answersRadioButton[0] = (RadioButton) findViewById(R.id.radio_button_1);
+        answersRadioButton[1] = (RadioButton) findViewById(R.id.radio_button_2);
+        answersRadioButton[2] = (RadioButton) findViewById(R.id.radio_button_3);
+        answersRadioButton[3] = (RadioButton) findViewById(R.id.radio_button_4);
 
-        SwipeDetector swipeDetector = new SwipeDetector() {
-
-            @Override
-            void onRightSwipe() {
-                prevQuestion(null);
-            }
-
-            @Override
-            void onLeftSwipe() {
-                nextQuestion(null);
-            }
-
-            @Override
-            void onClick() {
-            }
-        };
-        questionTextView.setOnTouchListener(swipeDetector);
-        timerTextView.setOnTouchListener(swipeDetector);
-
-        generateQuestions(getIntent().getExtras().getInt(TestsFragment.QUESTIONS_COUNT));
+        generateQuestions(getIntent().getExtras().getInt(Tests.QUESTIONS_COUNT));
 
         index = 0;
         redraw();
 
-        minutes = getIntent().getExtras().getInt(TestsFragment.TIME);
+        minutes = getIntent().getExtras().getInt(Tests.TIME);
         startTime = SystemClock.uptimeMillis() + (minutes * 60 * 1000);
         customHandler.postDelayed(updateTimerThread, 0);
         stoppedTimer = false;
@@ -226,4 +217,39 @@ public class TestsExamActivity extends ActionBarActivity {
         }
 
     };
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        Log.i("gesture", "ondown");
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+        Log.i("gesture", "onshowpress");
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        Log.i("gesture", "onSingleTapUp");
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        Log.i("gesture", "onScroll");
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        Log.i("gesture", "onLongPress");
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        Log.i("gesture", "onFling");
+        return false;
+    }
 }

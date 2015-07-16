@@ -1,27 +1,23 @@
 package cz.vojacekmilan.refereeassistant.results;
 
 import android.app.Activity;
-import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import cz.vojacekmilan.refereeassistant.DatabaseHelper;
-import cz.vojacekmilan.refereeassistant.ListUtils;
 import cz.vojacekmilan.refereeassistant.R;
+import cz.vojacekmilan.refereeassistant.Utils;
 
 public class RegionFragment extends Fragment {
     public static final String DB_NAME = "results";
@@ -29,9 +25,9 @@ public class RegionFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     private LeagueAdapter leagueAdapter;
-    private List<LeagueItem> leagues;
+    private List<LeagueAdapter.LeagueItem> leagues;
     private RegionAdapter regionAdapter;
-    private List<RegionItem> regions;
+    private List<RegionAdapter.RegionItem> regions;
     private int idRegion;
 
     public static RegionFragment newInstance(int idRegion) {
@@ -84,50 +80,62 @@ public class RegionFragment extends Fragment {
                 }
             }
         });
-        leagueListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (mListener != null) {
-                    DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
-                    databaseHelper.openDataBase();
-                    SQLiteDatabase db = databaseHelper.getReadableDatabase();
-                    leagues.get(position).setFavourite(!leagues.get(position).isFavourite());
-                    db.execSQL("UPDATE leagues SET favourite = " + (leagues.get(position).isFavourite() ? 1 : 0) + " WHERE _id = " + leagues.get(position).getId());
-                    db.close();
-                    databaseHelper.close();
-                    Toast.makeText(mListener.getApplicationContext(), "soutěž " + leagues.get(position).getText() + (leagues.get(position).isFavourite() ? " přidána do oblíbených" : " odebrána z oblíbených"), Toast.LENGTH_SHORT).show();
-                    leagueAdapter.notifyDataSetChanged();
-                    mListener.reloadMenu();
+
+        leagueListView.setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                        if (mListener != null) {
+                            changeFavourite(leagues.get(position));
+                            Snackbar.make(view, "soutěž " + leagues.get(position).getText() +
+                                    (leagues.get(position).isFavourite() ? " přidána do oblíbených"
+                                            : " odebrána z oblíbených"), Snackbar.LENGTH_LONG)
+                                    .setAction(R.string.undo, new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            changeFavourite(leagues.get(position));
+                                        }
+                                    }).show();
+                            return true;
+                        }
+                        return false;
+                    }
                 }
-                return true;
-            }
-        });
+
+        );
         regions.clear();
         leagues.clear();
         DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT _id, name FROM regions WHERE id_regions = " + idRegion, null);
+        Cursor cursor = databaseHelper.rawQuery("SELECT _id, name FROM regions WHERE id_regions = " + idRegion);
         while (cursor.moveToNext())
-            regions.add(new RegionItem(cursor.getInt(0), R.drawable.ic_region, cursor.getString(1)));//TODO ikona
+            regions.add(new RegionAdapter.RegionItem(cursor.getInt(0), R.drawable.ic_region, cursor.getString(1)));//TODO ikona
         cursor.close();
-        cursor = db.rawQuery("SELECT _id, name, favourite FROM leagues WHERE id_regions = " + idRegion, null);
+        cursor = databaseHelper.rawQuery("SELECT _id, name, favourite FROM leagues WHERE id_regions = " + idRegion);
         while (cursor.moveToNext())
-            leagues.add(new LeagueItem(cursor.getInt(0), R.drawable.ic_results, cursor.getString(1), cursor.getInt(2) == 1));//TODO ikona
+            leagues.add(new LeagueAdapter.LeagueItem(cursor.getInt(0), R.drawable.menu_results, cursor.getString(1), cursor.getInt(2) == 1));//TODO ikona
         cursor.close();
-        db.close();
         databaseHelper.close();
-        Log.i("leagues", Arrays.toString(leagues.toArray()));
-        Log.i("regions", Arrays.toString(regions.toArray()));
         regionAdapter.notifyDataSetChanged();
         leagueAdapter.notifyDataSetChanged();
         if (leagues.size() == 0)
             ((TextView) view.findViewById(R.id.text_view_leagues)).setHeight(0);
         if (regions.size() == 0)
             ((TextView) view.findViewById(R.id.text_view_regions)).setHeight(0);
-        ListUtils.setDynamicHeight(regionListView);
-        ListUtils.setDynamicHeight(leagueListView);
+        Utils.ListUtils.setDynamicHeight(regionListView);
+        Utils.ListUtils.setDynamicHeight(leagueListView);
         return view;
+    }
+
+    private void changeFavourite(LeagueAdapter.LeagueItem league) {
+        if (mListener != null) {
+            DatabaseHelper databaseHelper = new DatabaseHelper(getActivity(), DB_NAME);
+            league.setFavourite(!league.isFavourite());
+            databaseHelper.execSQL("UPDATE leagues SET favourite = " + (league.isFavourite() ? 1 : 0) + " WHERE _id = " + league.getId());
+            databaseHelper.close();
+            if (leagueAdapter != null)
+                leagueAdapter.notifyDataSetChanged();
+            mListener.reloadMenu();
+        }
     }
 
     @Override
@@ -148,8 +156,6 @@ public class RegionFragment extends Fragment {
         void loadLeague(int id);
 
         void reloadMenu();
-
-        Context getApplicationContext();
     }
 
 }

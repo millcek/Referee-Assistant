@@ -3,6 +3,7 @@ package cz.vojacekmilan.refereeassistant.tests;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -14,7 +15,7 @@ import java.util.Arrays;
 
 import cz.vojacekmilan.refereeassistant.R;
 
-public class TestsExamBrowsingActivity extends ActionBarActivity {
+public class ExamBrowsingActivity extends AppCompatActivity {
     private Question[] questions;
     private int index;
     Button prevButton;
@@ -68,14 +69,14 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
     }
 
     private void initialize(){
-        nextButton = (Button) findViewById(R.id.nextButton);
-        prevButton = (Button) findViewById(R.id.prevButton);
+        nextButton = (Button) findViewById(R.id.next_button);
+        prevButton = (Button) findViewById(R.id.prev_button);
         answersTextView = new TextView[4];
-        answersTextView[0] = (TextView) findViewById(R.id.textViewAnswer1);
-        answersTextView[1] = (TextView) findViewById(R.id.textViewAnswer2);
-        answersTextView[2] = (TextView) findViewById(R.id.textViewAnswer3);
-        answersTextView[3] = (TextView) findViewById(R.id.textViewAnswer4);
-        questionTextView = (TextView) findViewById(R.id.questionTextView);
+        answersTextView[0] = (TextView) findViewById(R.id.text_view_answer_1);
+        answersTextView[1] = (TextView) findViewById(R.id.text_view_answer_2);
+        answersTextView[2] = (TextView) findViewById(R.id.text_view_answer_3);
+        answersTextView[3] = (TextView) findViewById(R.id.text_view_answer_4);
+        questionTextView = (TextView) findViewById(R.id.text_view_question);
         scrollView = (ScrollView) findViewById(R.id.scroll_view);
         fillerView = findViewById(R.id.fillerView);
     }
@@ -87,30 +88,10 @@ public class TestsExamBrowsingActivity extends ActionBarActivity {
 
         initialize();
 
-        SwipeDetector swipeDetector = new SwipeDetector() {
-            @Override
-            void onRightSwipe() {
-                prevQuestion(null);
-            }
-
-            @Override
-            void onLeftSwipe() {
-                nextQuestion(null);
-            }
-
-            @Override
-            void onClick() {
-            }
-        };
-
-        questionTextView.setOnTouchListener(swipeDetector);
-        fillerView.setOnTouchListener(swipeDetector);
-        for (TextView tv : answersTextView)
-            tv.setOnTouchListener(swipeDetector);
-
+//TODO gestures
         Bundle b = getIntent().getExtras();
 
-        Parcelable[] parcelableArray = b.getParcelableArray(TestsFragment.QUESTIONS);
+        Parcelable[] parcelableArray = b.getParcelableArray(Tests.QUESTIONS);
         if (parcelableArray != null)
             questions = Arrays.copyOf(parcelableArray, parcelableArray.length, Question[].class);
 

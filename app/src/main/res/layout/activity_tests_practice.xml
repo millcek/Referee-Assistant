@@ -2,10 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:divider="@drawable/horizontal_divider_1"
     android:orientation="vertical"
-    android:showDividers="middle"
-    tools:context="cz.vojacekmilan.refereeassistant.tests.TestsPracticeActivity">
+    tools:context="cz.vojacekmilan.refereeassistant.tests.PracticeActivity">
 
     <ScrollView
         android:id="@+id/scroll_view"
@@ -17,92 +15,73 @@
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="0dp"
-            android:divider="@drawable/horizontal_divider_1"
-            android:orientation="vertical"
-            android:showDividers="middle">
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/questionTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="@dimen/default_padding"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:id="@+id/text_view_question"
+                style="@style/TextViewQuestion" />
 
             <RadioGroup
-                android:id="@+id/answersRadioGroup"
+                android:id="@+id/radio_group_answers"
+                style="@style/ShadowNoSideMargin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal">
 
                 <RadioButton
-                    android:id="@+id/radioButton1"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/exam_radiobutton"
-                    android:button="@android:color/transparent"
-                    android:checked="false"
-                    android:onClick="saveAnswer"
-                    android:padding="@dimen/default_padding" />
+                    android:id="@+id/radio_button_1"
+                    style="@style/RadioButtonAnswer"
+                    android:onClick="saveAnswer" />
 
                 <RadioButton
-                    android:id="@+id/radioButton2"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/exam_radiobutton"
-                    android:button="@android:color/transparent"
-                    android:onClick="saveAnswer"
-                    android:padding="@dimen/default_padding" />
+                    android:id="@+id/radio_button_2"
+                    style="@style/RadioButtonAnswer"
+                    android:onClick="saveAnswer" />
 
                 <RadioButton
-                    android:id="@+id/radioButton3"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/exam_radiobutton"
-                    android:button="@android:color/transparent"
-                    android:onClick="saveAnswer"
-                    android:padding="@dimen/default_padding" />
+                    android:id="@+id/radio_button_3"
+                    style="@style/RadioButtonAnswer"
+                    android:onClick="saveAnswer" />
 
                 <RadioButton
-                    android:id="@+id/radioButton4"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/exam_radiobutton"
-                    android:button="@android:color/transparent"
-                    android:onClick="saveAnswer"
-                    android:padding="@dimen/default_padding" />
+                    android:id="@+id/radio_button_4"
+                    style="@style/RadioButtonAnswer"
+                    android:onClick="saveAnswer" />
             </RadioGroup>
 
-            <View
-                android:id="@+id/fillerView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/text_view_timer"
+                android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="1"
-                android:padding="@dimen/default_padding" />
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/default_padding_min"
+                android:layout_weight="1" />
         </LinearLayout>
     </ScrollView>
 
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        style="?android:attr/buttonBarStyle"
+        android:dividerPadding="12dip"
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/prevButton"
+            android:id="@+id/prev_button"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            style="?android:attr/buttonBarButtonStyle"
             android:onClick="prevQuestion"
             android:text="@string/previous" />
 
         <Button
-            android:id="@+id/nextButton"
+            android:id="@+id/next_button"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            style="?android:attr/buttonBarButtonStyle"
             android:onClick="nextQuestion"
             android:text="@string/next" />
     </LinearLayout>

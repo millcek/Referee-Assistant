@@ -3,341 +3,246 @@ package cz.vojacekmilan.refereeassistant;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
-import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
+import cz.vojacekmilan.refereeassistant.delegations.AddDelegationFragment;
+import cz.vojacekmilan.refereeassistant.delegations.HomeFragment;
+import cz.vojacekmilan.refereeassistant.delegations.RefereeFragment;
+import cz.vojacekmilan.refereeassistant.delegations.SelectRegionFragment;
 import cz.vojacekmilan.refereeassistant.results.ClubFragment;
-import cz.vojacekmilan.refereeassistant.results.HomeFragment;
-import cz.vojacekmilan.refereeassistant.results.League;
+import cz.vojacekmilan.refereeassistant.results.LeagueAdapter;
 import cz.vojacekmilan.refereeassistant.results.LeagueFragment;
 import cz.vojacekmilan.refereeassistant.results.Region;
 import cz.vojacekmilan.refereeassistant.results.RegionFragment;
-import cz.vojacekmilan.refereeassistant.tests.TestsExamLauncherActivity;
-import cz.vojacekmilan.refereeassistant.tests.TestsFragment;
-import cz.vojacekmilan.refereeassistant.tests.TestsPracticeActivity;
+import cz.vojacekmilan.refereeassistant.tests.ExamLauncherActivity;
+import cz.vojacekmilan.refereeassistant.tests.PracticeActivity;
 
 
-public class MainActivity extends ActionBarActivity
-        implements RegionFragment.OnFragmentInteractionListener, LeagueFragment.OnFragmentInteractionListener, ClubFragment.OnFragmentInteractionListener, HomeFragment.OnFragmentInteractionListener {
-    private static final String STATE_SELECTED_POSITION = "selected_navigation_drawer_position";
-    private static final String PREF_USER_LEARNED_DRAWER = "navigation_drawer_learned";
-
-    private CharSequence mTitle;
-    private Stack<String> titlesStack;
-
+public class MainActivity extends AppCompatActivity
+        implements RegionFragment.OnFragmentInteractionListener, LeagueFragment.OnFragmentInteractionListener,
+        ClubFragment.OnFragmentInteractionListener, HomeFragment.OnFragmentInteractionListener,
+        SelectRegionFragment.OnFragmentInteractionListener, AddDelegationFragment.OnFragmentInteractionListener, RefereeFragment.OnFragmentInteractionListener {
+    private SubMenu favouritesSubMenu;
+    private Stack<CharSequence> titlesStack;
+    private NavigationView navigation;
     private Toolbar toolbar;
     private DrawerLayout mDrawerLayout;
-    private RelativeLayout mDrawerRelativeLayout;
-    private ListView mDrawerListView;
-    private int mCurrentSelectedPosition = 0;
     private ActionBarDrawerToggle mDrawerToggle;
-    private DrawerItem[] drawerItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setNavigationIcon(R.drawable.ic_drawer);
         setSupportActionBar(toolbar);
-
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerRelativeLayout = (RelativeLayout) findViewById(R.id.relative_layout);
-        mTitle = toolbar.getTitle();
-
-        reloadMenu();
-        mDrawerListView = (ListView) findViewById(R.id.list_view);
-        mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        navigation = (NavigationView) findViewById(R.id.navigation_view);
+        navigation.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                selectItem(position);
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+                selectItem(menuItem);
+                return true;
             }
         });
-        mDrawerListView.setAdapter(new DrawerItemAdapter(this,
-                R.layout.fragment_navigation_drawer_list_item, drawerItems));
-        mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
-        mDrawerLayout.openDrawer(mDrawerRelativeLayout);
-        ListUtils.setDynamicHeight(mDrawerListView);
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 toolbar, R.string.drawer_open,
                 R.string.drawer_close) {
-
+            @Override
             public void onDrawerClosed(View view) {
-                toolbar.setTitle(mTitle);
-                ActivityCompat.invalidateOptionsMenu(MainActivity.this);
+                super.onDrawerClosed(view);
             }
 
+            @Override
             public void onDrawerOpened(View drawerView) {
-                toolbar.setTitle(R.string.app_name);
-                ScrollView scrollView = (ScrollView) findViewById(R.id.scroll_view);
-                scrollView.pageScroll(View.FOCUS_UP);
-                ActivityCompat.invalidateOptionsMenu(MainActivity.this);
+                super.onDrawerOpened(drawerView);
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, 0);
             }
         };
-        mDrawerLayout.post(new Runnable() {
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                mDrawerToggle.syncState();
+            public void onClick(View v) {
+                if (titlesStack.size() > 1)
+                    onBackPressed();
+                else
+                    mDrawerLayout.openDrawer(GravityCompat.START);
             }
         });
         mDrawerLayout.setDrawerListener(mDrawerToggle);
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-        selectItem(mCurrentSelectedPosition);
-
+        reloadMenu();
+        selectItem(navigation.getMenu().findItem(R.id.menu_item_home));
+        restoreActionBar();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            if (mDrawerLayout.isDrawerOpen(mDrawerRelativeLayout))
-                mDrawerLayout.closeDrawer(mDrawerRelativeLayout);
-            else
-                mDrawerLayout.openDrawer(mDrawerRelativeLayout);
-            return true;
+    private void selectItem(MenuItem menuItem) {
+        if (menuItem == null) return;
+        FragmentManager fm = getSupportFragmentManager();
+        int backStackCount = fm.getBackStackEntryCount();
+        for (int i = 0; i < backStackCount; i++) {
+            int backStackId = fm.getBackStackEntryAt(i).getId();
+            fm.popBackStack(backStackId, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
-
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                Toast.makeText(this, R.string.action_settings, Toast.LENGTH_SHORT).show();
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (titlesStack != null)
+            titlesStack.clear();
+        if (menuItem.getGroupId() == R.id.menu_item_submenu_favourites) {
+            loadLeague(menuItem.getItemId());
+            navigation.getMenu().findItem(R.id.menu_item_results).setChecked(true);
+        } else if (menuItem.getGroupId() == R.id.menu_item_submenu_tests) {
+            switch (menuItem.getItemId()) {
+                case R.id.menu_item_tests_exam:
+                    startActivity(new Intent(this, ExamLauncherActivity.class));
+                    break;
+                case R.id.menu_item_tests_practice:
+                    startActivity(new Intent(this, PracticeActivity.class));
+                    break;
+            }
+        } else {
+            switch (menuItem.getItemId()) {
+                case R.id.menu_item_home:
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, HomeFragment.newInstance()).commit();
+                    setTitle(null);
+                    break;
+                case R.id.menu_item_results:
+                    loadRegion(0);
+                    break;
+            }
+            navigation.getMenu().findItem(menuItem.getItemId()).setChecked(true);
         }
-
-        return true;
-    }
-
-    private void selectItem(int position) {
-        try {
-            drawerItems[mCurrentSelectedPosition].deactivate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            drawerItems[position].activate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        mCurrentSelectedPosition = position;
-        if (mDrawerListView != null) {
-            mDrawerListView.setItemChecked(position, true);
-        }
-        if (mDrawerLayout != null) {
-            mDrawerLayout.closeDrawer(mDrawerRelativeLayout);
-        }
-        onNavigationDrawerItemSelected(position);
+        mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
     @Override
     public void onBackPressed() {
-        if (titlesStack.size() > 0)
-            titlesStack.pop();
-        if (titlesStack.size() > 0)
-            setTitle(titlesStack.pop());
-        else
+        if (titlesStack == null || titlesStack.size() < 2) {
             finish();
+            return;
+        }
+        titlesStack.pop();
+        setTitle(titlesStack.pop());
         super.onBackPressed();
     }
 
-    public void onNavigationDrawerItemSelected(int position) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        for (int i = 0; i < fragmentManager.getBackStackEntryCount(); ++i)
-            fragmentManager.popBackStack();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        if (titlesStack != null)
-            titlesStack.clear();
-        DatabaseHelper databaseHelper = new DatabaseHelper(this, RegionFragment.DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT _id FROM leagues WHERE favourite=1 ORDER BY _id", null);
-        List<Integer> ids = new LinkedList<>();
-        while (cursor.moveToNext()) {
-            ids.add(cursor.getInt(0));
-        }
-        cursor.close();
-        db.close();
-        databaseHelper.close();
-        int favouriteCount = ids.size();
-        if (position > 1 && position < favouriteCount + 2) {
-            loadLeague(ids.get(position - 2));
-        } else if (position < 2)
-            switch (position) {
-                case 0:
-                    fragmentTransaction.replace(R.id.container, HomeFragment.newInstance());
-                    setTitle(null);
-                    break;
-                case 1:
-                    loadRegion(0);
-                    break;
-            }
-        else {
-            switch (position - favouriteCount - 1) {
-                case 1:
-                    fragmentTransaction.replace(R.id.container, TestsFragment.newInstance());
-                    break;
-                case 2:
-                    startActivity(new Intent(this, TestsPracticeActivity.class));
-                    break;
-                case 3:
-                    startActivity(new Intent(this, TestsExamLauncherActivity.class));
-                    break;
-            }
-            setTitle(null);
-        }
-        fragmentTransaction.commit();
-        if (mTitle == null || mTitle.length() == 0)
-            setTitle(null);
-    }
-
     public void reloadMenu() {
-        CharSequence[] menuList = getResources().getTextArray(R.array.menu);
-        List<List<String>> subMenuLists = new ArrayList<>(menuList.length);
-        for (CharSequence ignored : menuList)
-            subMenuLists.add(new LinkedList<String>());
-
+        TextView textViewRegion = (TextView) findViewById(R.id.text_view_region);
+        TextView textViewName = (TextView) findViewById(R.id.text_view_name);
         DatabaseHelper databaseHelper = new DatabaseHelper(this, RegionFragment.DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM leagues WHERE favourite=1 ORDER BY _id", null);
-        while (cursor.moveToNext()) {
-            subMenuLists.get(1).add(cursor.getString(0));
+        Cursor cursor = databaseHelper.rawQuery("SELECT subscribed_delegations.name, " +
+                "(SELECT regions.name FROM regions WHERE _id = subscribed_delegations.id_regions) " +
+                "FROM subscribed_delegations");
+        if (cursor.moveToNext()) {
+            textViewRegion.setText(cursor.getString(1));
+            textViewName.setText(cursor.getString(0));
+        } else {
+            textViewName.setText(R.string.blank_name);
+            textViewRegion.setText(R.string.no_delegation);
         }
         cursor.close();
-        db.close();
+        List<String> strings = new LinkedList<>();
+        List<Integer> integers = new LinkedList<>();
+        cursor = databaseHelper.rawQuery("SELECT _id, name FROM leagues WHERE favourite=1 ORDER BY _id");
+        while (cursor.moveToNext()) {
+            integers.add(cursor.getInt(0));
+            strings.add(cursor.getString(1));
+        }
+        cursor.close();
         databaseHelper.close();
-
-        subMenuLists.get(2).add(this.getResources().getString(R.string.title_activity_tests_browsing));
-        subMenuLists.get(2).add(this.getResources().getString(R.string.title_activity_tests_exam));
-
-        int[] iconArray = new int[]{R.drawable.ic_home,
-                R.drawable.ic_results,
-                R.drawable.ic_test};
-        int count = menuList.length;
-        for (List<String> list : subMenuLists)
-            count += list.size();
-        drawerItems = new DrawerItem[count];
-        int i = 0;
-        int j = 0;
-        for (List<String> list : subMenuLists) {
-            drawerItems[j++] = new DrawerItem(iconArray[i], String.valueOf(menuList[i++]));
-            for (String s : list)
-                drawerItems[j++] = new DrawerItem(R.id.icon, s);//TODO ikona
+        if (favouritesSubMenu != null)
+            favouritesSubMenu.clear();
+        if (strings.size() > 0) {
+            if (favouritesSubMenu == null)
+                favouritesSubMenu = navigation.getMenu().addSubMenu(R.string.favourites);
+            for (int i = 0; i < strings.size(); i++)
+                favouritesSubMenu.add(R.id.menu_item_submenu_favourites, integers.get(i),
+                        favouritesSubMenu.size() + 1, strings.get(i));
         }
-        for (DrawerItem drawerItem : drawerItems)
-            Log.i("drawerItems", drawerItem.getName());
-        //TODO obnovit listview
-        if (mDrawerListView != null) {
-            mDrawerListView.setAdapter(new DrawerItemAdapter(this,
-                    R.layout.fragment_navigation_drawer_list_item, drawerItems));
-            mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
-            ListUtils.setDynamicHeight(mDrawerListView);
+        for (int i = 0, count = navigation.getChildCount(); i < count; i++) {
+            final View child = navigation.getChildAt(i);
+            if (child != null && child instanceof ListView) {
+                final ListView menuView = (ListView) child;
+                final HeaderViewListAdapter adapter = (HeaderViewListAdapter) menuView.getAdapter();
+                final BaseAdapter wrapped = (BaseAdapter) adapter.getWrappedAdapter();
+                wrapped.notifyDataSetChanged();
+            }
         }
     }
 
-    public void restoreActionBar() {
-        toolbar.setTitle(mTitle);
-//        ActionBar actionBar = getSupportActionBar();
-//        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-//        actionBar.setDisplayShowTitleEnabled(true);
-//        actionBar.setTitle(mTitle);
+    private void restoreActionBar() {
+        if (titlesStack != null && titlesStack.size() > 1) {
+            toolbar.setNavigationIcon(R.drawable.arrow_back);
+        } else {
+            toolbar.setNavigationIcon(R.drawable.ic_drawer);
+        }
     }
 
-    private void setTitle(String title) {
+    @Override
+    public void setTitle(CharSequence title) {
         if (titlesStack == null)
             titlesStack = new Stack<>();
-        if (title != null) {
-            if (title.length() > 0)
-                mTitle = title;
-            else
-                mTitle = getString(R.string.title_activity_main);
-            titlesStack.push(title);
-        } else
-            mTitle = getString(R.string.title_activity_main);
+        if (title == null || title.length() == 0)
+            title = getString(R.string.title_activity_main);
+        titlesStack.push(title);
+        toolbar.setTitle(title);
         restoreActionBar();
     }
-//
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        return true;
-//    }
-
-    public void loadRegion(Region region) {
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.container, RegionFragment.newInstance(region.getId()));
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
-        restoreActionBar();
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        setTitle(region.getName());
-    }
-
 
     @Override
     public void loadClub(int id) {
         if (id < 1)
             return;
         DatabaseHelper databaseHelper = new DatabaseHelper(this, RegionFragment.DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery(String.format("SELECT _id FROM results WHERE id_clubs_home = %d OR id_clubs_away = %d", id, id), null);
+        Cursor cursor = databaseHelper.rawQuery(String.format(
+                "SELECT _id FROM results WHERE id_clubs_home = %d OR id_clubs_away = %d", id, id));
         int count = cursor.getCount();
         cursor.close();
-        db.close();
         databaseHelper.close();
-
         if (count < 1) {
-            Toast.makeText(getApplicationContext(), "Pro vybraný tým nejsou k dispozici žádné výsledky", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Pro vybraný tým nejsou k dispozici žádné výsledky", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.container, ClubFragment.newInstance(id));
-        fragmentTransaction.addToBackStack(null);
-        restoreActionBar();
-        fragmentTransaction.commit();
-        setTitle(selectName(id, "clubs").replace("&quot;", "\""));
+        replaceFragment(ClubFragment.newInstance(id), selectName(id, "clubs").replace("&quot;", "\""));
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        // Forward the new configuration the drawer toggle component.
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
+    public void editDelegations() {
+        replaceFragment(RefereeFragment.newInstance(), R.string.edit_subscribed_delegations);
+    }
+
+    @Override
     public void loadLeague(int id) {
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.container, LeagueFragment.newInstance(id));
-        fragmentTransaction.addToBackStack(null);
-        restoreActionBar();
-        fragmentTransaction.commit();
-        setTitle(selectName(id, "leagues"));
+        replaceFragment(LeagueFragment.newInstance(id), selectName(id, "leagues"));
     }
 
     @Override
@@ -351,17 +256,46 @@ public class MainActivity extends ActionBarActivity
         loadRegion(new Region(id, selectName(id, "regions")));
     }
 
+    private void loadRegion(Region region) {
+        replaceFragment(RegionFragment.newInstance(region.getId()), region.getName());
+    }
+
     private String selectName(int id, String table) {
         DatabaseHelper databaseHelper = new DatabaseHelper(this, RegionFragment.DB_NAME);
-        databaseHelper.openDataBase();
-        SQLiteDatabase db = databaseHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM " + table + " WHERE _id = " + id, null);
+        Cursor cursor = databaseHelper.rawQuery("SELECT name FROM " + table + " WHERE _id = " + id);
         String name = "";
         if (cursor.moveToNext())
             name = cursor.getString(0);
         cursor.close();
-        db.close();
         databaseHelper.close();
         return name;
+    }
+
+    @Override
+    public void selectRegionForDelegation() {
+        replaceFragment(SelectRegionFragment.newInstance(), R.string.add_referee);
+    }
+
+    @Override
+    public void editReferee(int id) {
+
+    }
+
+    @Override
+    public void addDelegation(int idRegion, String name) {
+        replaceFragment(AddDelegationFragment.newInstance(idRegion), name);
+    }
+
+    private void replaceFragment(Fragment fragment, int title) {
+        replaceFragment(fragment, getResources().getString(title));
+    }
+
+    private void replaceFragment(Fragment fragment, String title) {
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.container, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+        restoreActionBar();
+        setTitle(title);
     }
 }

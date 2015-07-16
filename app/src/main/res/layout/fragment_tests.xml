@@ -3,17 +3,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="cz.vojacekmilan.refereeassistant.tests.TestsFragment">
+    tools:context="cz.vojacekmilan.refereeassistant.tests.Tests">
 
     <Button
         android:id="@+id/buttonTestsBrowsing"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/title_activity_tests_browsing" />
+        android:text="@string/tests_browsing" />
 
     <Button
         android:id="@+id/buttonTestsExam"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/title_activity_tests_exam" />
+        android:text="@string/tests_exam" />
 </GridLayout>

@@ -1,0 +1,105 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="cz.vojacekmilan.refereeassistant.delegations.AddDelegationFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/default_padding">
+
+        <TextView
+            android:id="@+id/text_view_error"
+            android:layout_width="wrap_content"
+            android:layout_height="0sp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/red_700" />
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/default_padding">
+
+            <AutoCompleteTextView
+                android:id="@+id/auto_complete_text_view_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="45dp"
+                android:backgroundTint="@color/accent"
+                android:hint="@string/name_in_delegation"
+                android:popupBackground="@color/accent" />
+        </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/default_padding"
+            android:singleLine="false"
+            android:text="@string/choose_positions" />
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:columnCount="3"
+            android:gravity="center"
+            android:rowCount="2">
+
+            <CheckBox
+                android:id="@+id/checkbox_hr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:padding="@dimen/default_padding"
+                android:text="@string/hr" />
+
+            <CheckBox
+                android:id="@+id/checkbox_ar1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:padding="@dimen/default_padding"
+                android:text="@string/ar1" />
+
+            <CheckBox
+                android:id="@+id/checkbox_ar2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:padding="@dimen/default_padding"
+                android:text="@string/ar2" />
+
+            <CheckBox
+                android:id="@+id/checkbox_r4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:padding="@dimen/default_padding"
+                android:text="@string/r4" />
+
+            <CheckBox
+                android:id="@+id/checkbox_ds"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_padding"
+                android:text="@string/ds" />
+
+            <CheckBox
+                android:id="@+id/checkbox_td"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/default_padding"
+                android:text="@string/td" />
+        </GridLayout>
+
+        <Button
+            android:layout_width="match_parent"
+            android:id="@+id/button"
+            android:text="@string/add"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+</ScrollView>

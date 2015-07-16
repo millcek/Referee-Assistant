@@ -3,9 +3,12 @@ package cz.vojacekmilan.refereeassistant.tests;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -21,7 +24,7 @@ import cz.vojacekmilan.refereeassistant.DatabaseHelper;
 import cz.vojacekmilan.refereeassistant.R;
 
 
-public class TestsPracticeActivity extends ActionBarActivity {
+public class PracticeActivity extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
     private ScrollView scrollView;
     private Button nextButton;
@@ -39,37 +42,19 @@ public class TestsPracticeActivity extends ActionBarActivity {
         setContentView(R.layout.activity_tests_practice);
 
         scrollView = (ScrollView) findViewById(R.id.scroll_view);
-        nextButton = (Button) findViewById(R.id.nextButton);
-        prevButton = (Button) findViewById(R.id.prevButton);
-        answersRadioGroup = (RadioGroup) findViewById(R.id.answersRadioGroup);
+        nextButton = (Button) findViewById(R.id.next_button);
+        prevButton = (Button) findViewById(R.id.prev_button);
+        answersRadioGroup = (RadioGroup) findViewById(R.id.radio_group_answers);
         answersRadioButton = new RadioButton[4];
-        answersRadioButton[0] = (RadioButton) findViewById(R.id.radioButton1);
-        answersRadioButton[1] = (RadioButton) findViewById(R.id.radioButton2);
-        answersRadioButton[2] = (RadioButton) findViewById(R.id.radioButton3);
-        answersRadioButton[3] = (RadioButton) findViewById(R.id.radioButton4);
-        questionTextView = (TextView) findViewById(R.id.questionTextView);
+        answersRadioButton[0] = (RadioButton) findViewById(R.id.radio_button_1);
+        answersRadioButton[1] = (RadioButton) findViewById(R.id.radio_button_2);
+        answersRadioButton[2] = (RadioButton) findViewById(R.id.radio_button_3);
+        answersRadioButton[3] = (RadioButton) findViewById(R.id.radio_button_4);
+        questionTextView = (TextView) findViewById(R.id.text_view_question);
         generatedQuestions = new LinkedList<>();
         fillerView = findViewById(R.id.fillerView);
 
-        SwipeDetector swipeDetector = new SwipeDetector() {
-            @Override
-            void onRightSwipe() {
-                prevQuestion(null);
-            }
-
-            @Override
-            void onLeftSwipe() {
-                nextQuestion(null);
-            }
-
-            @Override
-            void onClick() {
-            }
-        };
-
-        questionTextView.setOnTouchListener(swipeDetector);
-        fillerView.setOnTouchListener(swipeDetector);
-
+//TODO gestures
         nextQuestion(null);
     }
 
@@ -119,7 +104,7 @@ public class TestsPracticeActivity extends ActionBarActivity {
         Random random = new Random();
         int randomInt;
         do {
-            randomInt = random.nextInt(TestsFragment.DB_QUESTIONS_COUNT);
+            randomInt = random.nextInt(Tests.DB_QUESTIONS_COUNT);
         } while (generatedQuestions.contains(randomInt));
         generatedQuestions.add(randomInt);
 
@@ -127,7 +112,7 @@ public class TestsPracticeActivity extends ActionBarActivity {
     }
 
     private Question getQuestionFromDB(int id) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(this, TestsFragment.DB_NAME);
+        DatabaseHelper databaseHelper = new DatabaseHelper(this, Tests.DB_NAME);
         databaseHelper.openDataBase();
         SQLiteDatabase db = databaseHelper.getReadableDatabase();
 
@@ -182,5 +167,40 @@ public class TestsPracticeActivity extends ActionBarActivity {
             answersRadioButton[question.getCorrectAnswerIndex()].setChecked(true);
             saveAnswer(null);
         }
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        Log.i("gesture", "ondown");
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+        Log.i("gesture", "onshowpress");
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        Log.i("gesture", "onSingleTapUp");
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        Log.i("gesture", "onScroll");
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        Log.i("gesture", "onLongPress");
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        Log.i("gesture", "onFling");
+        return false;
     }
 }

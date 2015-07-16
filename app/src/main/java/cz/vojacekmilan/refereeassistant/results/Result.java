@@ -16,6 +16,17 @@ public class Result {
     private String note;
     private int round;
 
+    public Result(String home, String away, int homeScore, int awayScore, int awayScoreHalf, int homeScoreHalf, int viewers, String note) {
+        this.home = home;
+        this.away = away;
+        this.homeScore = homeScore;
+        this.awayScore = awayScore;
+        this.awayScoreHalf = awayScoreHalf;
+        this.homeScoreHalf = homeScoreHalf;
+        this.viewers = viewers;
+        this.note = note;
+    }
+
     public Result(Object[] values) {
         int i = 0;
         for (Object object : values) {
@@ -195,11 +206,14 @@ public class Result {
                 "}\n";
     }
 
-    public String getScore() {
+    public String getResultHalf() {
         if ((homeScore == 0 && awayScore == 0) || homeScoreHalf == -1 || awayScoreHalf == -1)
-            return String.format("%d:%d", homeScore, awayScore);
-        else
-            return String.format("%d:%d (%d:%d)", homeScore, awayScore, homeScoreHalf, awayScoreHalf);
+            return "";
+        return String.format("%d:%d", homeScoreHalf, awayScoreHalf);
+    }
+
+    public String getResult() {
+        return String.format("%d:%d", homeScore, awayScore);
     }
 
     public void setScore(int homeScore, int awayScore, int homeScoreHalf, int awayScoreHalf) {

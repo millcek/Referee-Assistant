@@ -1,65 +1,46 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:divider="@drawable/horizontal_divider_1"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:showDividers="middle"
-    tools:context="cz.vojacekmilan.refereeassistant.tests.TestsExamLauncherActivity">
+    tools:context="cz.vojacekmilan.refereeassistant.tests.ExamLauncherActivity">
 
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="@dimen/default_padding">
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="@dimen/default_padding"
             android:text="@string/questions_count" />
-
-        <TextView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/test_time_in_minutes" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:divider="@drawable/vertical_divider_1"
-        android:orientation="horizontal"
-        android:showDividers="middle">
 
         <NumberPicker
             android:id="@+id/questionsCountNumberPicker"
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:padding="@dimen/default_padding" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
+            android:text="@string/test_time_in_minutes" />
 
         <NumberPicker
             android:id="@+id/timeNumberPicker"
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:padding="@dimen/default_padding" />
+
+        <Button
+            android:id="@+id/floating_action_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="startExam"
+            android:padding="@dimen/default_padding"
+            android:text="@string/start_test" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <Button
-        android:id="@+id/floating_action_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="startExam"
-        android:padding="@dimen/default_padding"
-        android:text="@string/start_test" />
-
-</LinearLayout>
+</ScrollView>
